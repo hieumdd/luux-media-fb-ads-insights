@@ -16,6 +16,7 @@ AdsInsights = ads_insights_pipeline(
             "clicks",
             "inline_link_clicks",
             "spend",
+            "reach",
             "impressions",
             "actions",
             "action_values",
@@ -43,6 +44,7 @@ AdsInsights = ads_insights_pipeline(
             "clicks": row.get("clicks"),
             "inline_link_clicks": row.get("inline_link_clicks"),
             "spend": row.get("spend"),
+            "reach": row.get("reach"),
             "impressions": row.get("impressions"),
             "actions": [
                 {
@@ -192,6 +194,7 @@ AdsInsights = ads_insights_pipeline(
             {"name": "clicks", "type": "NUMERIC"},
             {"name": "inline_link_clicks", "type": "NUMERIC"},
             {"name": "spend", "type": "NUMERIC"},
+            {"name": "reach", "type": "NUMERIC"},
             {"name": "impressions", "type": "NUMERIC"},
             {
                 "name": "actions",
