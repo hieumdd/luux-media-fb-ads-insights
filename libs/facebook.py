@@ -6,10 +6,11 @@ import time
 
 import requests
 
-NOW = datetime.utcnow()
-DATE_FORMAT = "%Y-%m-%d"
+from secret_manager.doppler import get_access_token
 
-API_VER = "v12.0"
+NOW = datetime.utcnow()
+
+API_VER = "v13.0"
 BASE_URL = f"https://graph.facebook.com/{API_VER}/"
 
 
@@ -36,7 +37,6 @@ def _request_async_report(
     end: datetime,
 ) -> ReportRunId:
     params = {
-        "access_token": os.getenv("ACCESS_TOKEN"),
         "level": request_options["level"],
         "fields": json.dumps(request_options["fields"]),
         "action_attribution_windows": json.dumps(
@@ -77,8 +77,8 @@ def _request_async_report(
         "time_increment": 1,
         "time_range": json.dumps(
             {
-                "since": start.strftime(DATE_FORMAT),
-                "until": end.strftime(DATE_FORMAT),
+                "since": start.date().isoformat(),
+                "until": end.date().isoformat(),
             }
         ),
     }
@@ -86,7 +86,7 @@ def _request_async_report(
         params["breakdowns"] = request_options["breakdowns"]
     with session.post(
         f"{BASE_URL}/act_{ads_account_id}/insights",
-        params=params,
+        params=params, # type: ignore
     ) as r:
         res = r.json()
     return res["report_run_id"]
@@ -98,7 +98,6 @@ def _poll_async_report(
 ) -> ReportRunId:
     with session.get(
         f"{BASE_URL}/{report_run_id}",
-        params={"access_token": os.getenv("ACCESS_TOKEN")},
     ) as r:
         res = r.json()
     if (
@@ -153,7 +152,6 @@ def _get_insights(
         with session.get(
             f"{BASE_URL}/{report_run_id}/insights",
             params={
-                "access_token": os.getenv("ACCESS_TOKEN"),
                 "limit": 500,
                 "after": after,
             },
@@ -178,6 +176,9 @@ def get(
     end: datetime,
 ) -> Insights:
     with requests.Session() as session:
+        session.params = {
+            "access_token": get_access_token(),
+        }
         return _get_insights(
             session,
             _get_async_report(
