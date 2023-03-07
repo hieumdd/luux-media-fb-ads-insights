@@ -1,7 +1,13 @@
 import { createTasks } from '../task/cloud-tasks.service';
 import * as pipelines from './pipeline.const';
 
-export const ACCOUNTS = ['892630467592850', '259707128315398'];
+export const ACCOUNTS = [
+    '892630467592850',
+    '259707128315398',
+    '1353175741501928',
+    '2420986814809109',
+    '740269656424403',
+];
 
 export type TaskOptions = {
     pipeline: keyof typeof pipelines;

@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { http } from '@google-cloud/functions-framework';
+import { http,  } from '@google-cloud/functions-framework';
 import express from 'express';
 
 import * as pipelines from './facebook/pipeline.const';
