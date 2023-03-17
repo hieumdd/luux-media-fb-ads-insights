@@ -119,7 +119,7 @@ export const ADS_INSIGHTS: Pipeline = {
 export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     name: 'CampaignsPublisherPlatformInsights',
     insightsOptions: {
-        level: 'campaign',
+        level: 'ad',
         breakdowns: 'publisher_platform',
         fields: [
             'date_start',
@@ -127,6 +127,10 @@ export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
             'account_id',
             'campaign_id',
             'campaign_name',
+            'adset_id',
+            'adset_name',
+            'ad_id',
+            'ad_name',
             'actions',
             'action_values',
             'clicks',
@@ -148,6 +152,10 @@ export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
         publisher_platform: Joi.string(),
         campaign_id: Joi.number().unsafe(),
         campaign_name: Joi.string(),
+        adset_id: Joi.number().unsafe(),
+        adset_name: Joi.string(),
+        ad_id: Joi.number().unsafe(),
+        ad_name: Joi.string(),
         clicks: Joi.number().optional(),
         cpc: Joi.number().optional(),
         cpm: Joi.number().optional(),
