@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { http,  } from '@google-cloud/functions-framework';
+import { http } from '@google-cloud/functions-framework';
 import express from 'express';
 
 import * as pipelines from './facebook/pipeline.const';
@@ -8,22 +8,24 @@ import { taskService } from './facebook/account.service';
 
 const app = express();
 
-type RunPipelineDto = {
-    pipeline: keyof typeof pipelines;
-    accountId: string;
-    start?: string;
-    end?: string;
-};
-
 app.use(({ path, body }, res, next) => {
     const log = { path, body };
     console.log(JSON.stringify(log));
     next();
 });
 
+type TaskDto = {
+    start?: string;
+    end?: string;
+};
+
+type RunPipelineDto = {
+    pipeline: keyof typeof pipelines;
+    accountId: string;
+} & TaskDto;
+
 app.use('/task', (req, res) => {
     Joi.object<Omit<RunPipelineDto, 'accountId'>>({
-        pipeline: Joi.string(),
         start: Joi.string().optional(),
         end: Joi.string().optional(),
     })
@@ -47,9 +49,9 @@ app.use('/', (req, res) => {
         end: Joi.string().optional(),
     })
         .validateAsync(req.body)
-        .then(({ pipeline, accountId, start, end }) =>
-            pipelineService({ accountId, start, end }, pipelines[pipeline]),
-        )
+        .then(({ pipeline, accountId, start, end }) => {
+            return pipelineService({ accountId, start, end }, pipelines[pipeline]);
+        })
         .then((result) => res.status(200).json({ result }))
         .catch((err) => {
             console.error('err', err);
