@@ -4,7 +4,7 @@ import { createPipelineTasks, runPipeline } from './pipeline.service';
 it('pipeline', async () => {
     return runPipeline(
         {
-            accountId: '2304291883206771',
+            accountId: '1220093882213517',
             start: '2023-04-01',
             end: '2023-05-01',
         },
