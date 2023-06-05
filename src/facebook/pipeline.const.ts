@@ -1,10 +1,10 @@
 import Joi from 'joi';
 
-import { InsightsOptions } from './facebook.repository';
+import { InsightsConfig } from './insights.service';
 
 export type Pipeline = {
     name: string;
-    insightsOptions: InsightsOptions;
+    insightsConfig: InsightsConfig;
     validationSchema: Joi.Schema;
     schema: Record<string, any>[];
 };
@@ -15,7 +15,7 @@ const actionBreakdownSchema = Joi.array()
 
 export const ADS_INSIGHTS: Pipeline = {
     name: 'AdsInsights',
-    insightsOptions: {
+    insightsConfig: {
         level: 'ad',
         fields: [
             'date_start',
@@ -118,7 +118,7 @@ export const ADS_INSIGHTS: Pipeline = {
 
 export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     name: 'CampaignsPublisherPlatformInsights',
-    insightsOptions: {
+    insightsConfig: {
         level: 'ad',
         breakdowns: 'publisher_platform',
         fields: [

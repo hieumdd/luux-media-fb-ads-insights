@@ -1,28 +1,25 @@
-import { createTasks } from '../task/cloud-tasks.service';
-import * as pipelines from './pipeline.const';
+import { getClient } from './api.service';
 
-export const ACCOUNTS = [
-    '892630467592850',
-    '259707128315398',
-    '1353175741501928',
-    '2420986814809109',
-    '740269656424403',
-];
+type ListAccountsResponse = { data: { account_id: string; id: string }[] };
 
-export type TaskOptions = {
-    start?: string;
-    end?: string;
-};
+export const getAccounts = async () => {
+    const client = await getClient();
 
-export const taskService = ({ start, end }: TaskOptions) => {
-    const data = Object.values(ACCOUNTS).flatMap((accountId) => {
-        return Object.keys(pipelines).map((pipeline) => ({
-            accountId: String(accountId),
-            start,
-            end,
-            pipeline,
-        }));
+    const BUSINESS_ID = 479140315800396;
+
+    return Promise.all(
+        ['client_ad_accounts', 'owned_ad_accounts'].map(async (edge) => {
+            return client
+                .request<ListAccountsResponse>({
+                    method: 'GET',
+                    params: { limit: 500 },
+                    url: `/${BUSINESS_ID}/${edge}`,
+                })
+                .then((response) => {
+                    return response.data.data;
+                });
+        }),
+    ).then((accountGroups) => {
+        return accountGroups.flatMap((accounts) => accounts.map(({ account_id }) => account_id));
     });
-
-    return createTasks(data, (task) => task.accountId);
 };

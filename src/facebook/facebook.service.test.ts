@@ -1,31 +1,30 @@
-import { pipelineService } from './facebook.service';
-import { ACCOUNTS, taskService } from './account.service';
 import { ADS_INSIGHTS, CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS } from './pipeline.const';
+import { createPipelineTasks, runPipeline } from './pipeline.service';
 
-describe('pipeline', () => {
-    it.concurrent.each(ACCOUNTS)(
-        'account %p',
-        async (accountId) => {
-            console.log(accountId);
-            return pipelineService(
-                {
-                    accountId: String(accountId),
-                    start: '2022-06-01',
-                    end: '2023-01-01',
-                },
-                CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS,
-            ).catch((err) => {
-                console.error({ err, accountId });
-                return Promise.reject(err);
-            });
+it('pipeline', async () => {
+    return runPipeline(
+        {
+            accountId: '2304291883206771',
+            start: '2023-04-01',
+            end: '2023-05-01',
         },
-        540_000,
-    );
+        ADS_INSIGHTS,
+    )
+        .then((results) => expect(results).toBeDefined())
+        .catch((error) => {
+            console.error({ error });
+            return Promise.reject(error);
+        });
 });
 
-it('task', async () => {
-    return taskService({
-        start: '2022-03-20',
-        end: '2022-04-01',
-    }).then((num) => expect(num).toBeGreaterThan(0));
+it('create-tasks', async () => {
+    return createPipelineTasks({
+        start: '2023-05-01',
+        end: '2023-06-01',
+    })
+        .then((result) => expect(result).toBeDefined())
+        .catch((error) => {
+            console.error({ error });
+            return Promise.reject(error);
+        });
 });
