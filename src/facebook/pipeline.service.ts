@@ -1,4 +1,4 @@
-import { Transform } from 'node:stream';
+import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -31,6 +31,7 @@ export const runPipeline = async (reportOptions: ReportOptions, pipeline_: pipel
         createLoadStream({
             table: `p_${pipeline_.name}__${reportOptions.accountId}`,
             schema: [...pipeline_.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
+            writeDisposition: 'WRITE_APPEND',
         }),
     );
 
@@ -43,11 +44,30 @@ export type CreatePipelineTasksOptions = {
 };
 
 export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksOptions) => {
-    return getAccounts()
-        .then((accounts) => {
-            return Object.keys(pipelines).flatMap((pipeline) => {
-                return accounts.map((accountId) => ({ accountId, start, end, pipeline }));
-            });
-        })
-        .then((data) => createTasks(data, (task) => [task.pipeline, task.accountId].join('-')));
+    const accounts = await getAccounts();
+
+    return Promise.all([
+        Object.keys(pipelines)
+            .map((pipeline) => {
+                return accounts.map(({ account_id }) => ({
+                    accountId: account_id,
+                    start,
+                    end,
+                    pipeline,
+                }));
+            })
+            .map((data) => createTasks(data, (task) => [task.pipeline, task.accountId].join('-'))),
+        pipeline(
+            Readable.from(accounts),
+            ndjson.stringify(),
+            createLoadStream({
+                table: `Accounts`,
+                schema: [
+                    { name: 'account_name', type: 'STRING' },
+                    { name: 'account_id', type: 'INT64' },
+                ],
+                writeDisposition: 'WRITE_TRUNCATE',
+            }),
+        ),
+    ]);
 };

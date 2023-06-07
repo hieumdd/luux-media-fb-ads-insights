@@ -19,8 +19,8 @@ it('pipeline', async () => {
 
 it('create-tasks', async () => {
     return createPipelineTasks({
-        start: '2023-05-01',
-        end: '2023-06-01',
+        start: '2023-06-01',
+        end: '2023-07-01',
     })
         .then((result) => expect(result).toBeDefined())
         .catch((error) => {

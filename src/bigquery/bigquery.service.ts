@@ -7,6 +7,7 @@ const DATASET = 'Facebook';
 type CreateLoadStreamOptions = {
     table: string;
     schema: Record<string, any>[];
+    writeDisposition: 'WRITE_APPEND' | 'WRITE_TRUNCATE';
 };
 
 export const createLoadStream = (options: CreateLoadStreamOptions) => {
@@ -17,6 +18,6 @@ export const createLoadStream = (options: CreateLoadStreamOptions) => {
             schema: { fields: options.schema },
             sourceFormat: 'NEWLINE_DELIMITED_JSON',
             createDisposition: 'CREATE_IF_NEEDED',
-            writeDisposition: 'WRITE_APPEND',
+            writeDisposition: options.writeDisposition,
         });
 };
