@@ -1,4 +1,8 @@
-import { ADS_INSIGHTS, CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS } from './pipeline.const';
+import {
+    ADS_INSIGHTS,
+    CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS,
+    ADS_COUNTRY_REGION_INSIGHTS,
+} from './pipeline.const';
 import { createPipelineTasks, runPipeline } from './pipeline.service';
 
 it('pipeline', async () => {
@@ -8,7 +12,7 @@ it('pipeline', async () => {
             start: '2023-04-01',
             end: '2023-05-01',
         },
-        ADS_INSIGHTS,
+        ADS_COUNTRY_REGION_INSIGHTS,
     )
         .then((results) => expect(results).toBeDefined())
         .catch((error) => {
