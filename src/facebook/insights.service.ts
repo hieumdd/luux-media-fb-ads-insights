@@ -71,7 +71,7 @@ export const get = async (options: ReportOptions, config: InsightsConfig): Promi
     };
 
     const getInsights = (reportId: string): Readable => {
-        const stream = new Readable({ objectMode: true, read: () => {} });
+        const stream = new Readable({ objectMode: true, read: () => { } });
 
         const _getInsights = (after?: string) => {
             client
@@ -85,7 +85,12 @@ export const get = async (options: ReportOptions, config: InsightsConfig): Promi
                     data.forEach((row) => stream.push(row));
                     paging.next ? _getInsights(paging.cursors.after) : stream.push(null);
                 })
-                .catch((error) => stream.emit('error', error));
+                .catch((error) => {
+                    if (axios.isAxiosError(error)) {
+                        console.log(JSON.stringify(error.response?.data));
+                    }
+                    stream.emit('error', error)
+                });
         };
 
         _getInsights();
@@ -96,12 +101,12 @@ export const get = async (options: ReportOptions, config: InsightsConfig): Promi
     return requestReport()
         .then(pollReport)
         .then(getInsights)
-        .catch((err) => {
-            if (axios.isAxiosError(err)) {
-                console.log(JSON.stringify(err.response?.data));
+        .catch((error) => {
+            if (axios.isAxiosError(error)) {
+                console.log(JSON.stringify(error.response?.data));
             } else {
-                console.log(err);
+                console.log(error);
             }
-            return Promise.reject(err);
+            return Promise.reject(error);
         });
 };
