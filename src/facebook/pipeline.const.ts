@@ -211,10 +211,10 @@ export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     ],
 };
 
-export const ADS_COUNTRY_REGION_INSIGHTS: Pipeline = {
-    name: 'AdCountryRegionInsights',
+export const CAMPAIGNS_COUNTRY_REGION_INSIGHTS: Pipeline = {
+    name: 'CampaignsCountryRegionInsights',
     insightsConfig: {
-        level: 'ad',
+        level: 'campaign',
         breakdowns: ['country','region'].join(','),
         fields: [
             'date_start',
@@ -222,10 +222,6 @@ export const ADS_COUNTRY_REGION_INSIGHTS: Pipeline = {
             'account_id',
             'campaign_id',
             'campaign_name',
-            'adset_id',
-            'adset_name',
-            'ad_id',
-            'ad_name',
             'actions',
             'action_values',
             'clicks',
@@ -248,10 +244,6 @@ export const ADS_COUNTRY_REGION_INSIGHTS: Pipeline = {
         region: Joi.string(),
         campaign_id: Joi.number().unsafe(),
         campaign_name: Joi.string(),
-        adset_id: Joi.number().unsafe(),
-        adset_name: Joi.string(),
-        ad_id: Joi.number().unsafe(),
-        ad_name: Joi.string(),
         clicks: Joi.number().optional(),
         cpc: Joi.number().optional(),
         cpm: Joi.number().optional(),
@@ -273,10 +265,6 @@ export const ADS_COUNTRY_REGION_INSIGHTS: Pipeline = {
         { name: 'region', type: 'STRING' },
         { name: 'campaign_id', type: 'NUMERIC' },
         { name: 'campaign_name', type: 'STRING' },
-        { name: 'adset_id', type: 'NUMERIC' },
-        { name: 'adset_name', type: 'STRING' },
-        { name: 'ad_id', type: 'NUMERIC' },
-        { name: 'ad_name', type: 'STRING' },
         { name: 'cpc', type: 'NUMERIC' },
         { name: 'cpm', type: 'NUMERIC' },
         { name: 'ctr', type: 'NUMERIC' },
