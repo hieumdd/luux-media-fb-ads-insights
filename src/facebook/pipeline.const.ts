@@ -211,11 +211,11 @@ export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     ],
 };
 
-export const CAMPAIGNS_COUNTRY_REGION_INSIGHTS: Pipeline = {
-    name: 'CampaignsCountryRegionInsights',
+export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
+    name: 'CampaignsCountryInsights',
     insightsConfig: {
         level: 'campaign',
-        breakdowns: ['country','region'].join(','),
+        breakdowns: 'country',
         fields: [
             'date_start',
             'date_stop',
@@ -241,7 +241,6 @@ export const CAMPAIGNS_COUNTRY_REGION_INSIGHTS: Pipeline = {
         date_stop: Joi.string(),
         account_id: Joi.number().unsafe(),
         country: Joi.string(),
-        region: Joi.string(),
         campaign_id: Joi.number().unsafe(),
         campaign_name: Joi.string(),
         clicks: Joi.number().optional(),
@@ -262,7 +261,6 @@ export const CAMPAIGNS_COUNTRY_REGION_INSIGHTS: Pipeline = {
         { name: 'date_stop', type: 'DATE' },
         { name: 'account_id', type: 'NUMERIC' },
         { name: 'country', type: 'STRING' },
-        { name: 'region', type: 'STRING' },
         { name: 'campaign_id', type: 'NUMERIC' },
         { name: 'campaign_name', type: 'STRING' },
         { name: 'cpc', type: 'NUMERIC' },
