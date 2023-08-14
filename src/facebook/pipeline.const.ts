@@ -116,8 +116,8 @@ export const ADS_INSIGHTS: Pipeline = {
     ],
 };
 
-export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
-    name: 'CampaignsPublisherPlatformInsights',
+export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
+    name: 'AdsPublisherPlatformInsights',
     insightsConfig: {
         level: 'ad',
         breakdowns: 'publisher_platform',
