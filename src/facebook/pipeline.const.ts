@@ -45,12 +45,12 @@ export const ADS_INSIGHTS: Pipeline = {
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
-        account_id: Joi.number().unsafe(),
-        campaign_id: Joi.number().unsafe(),
+        account_id: Joi.string(),
+        campaign_id: Joi.string(),
         campaign_name: Joi.string(),
-        adset_id: Joi.number().unsafe(),
+        adset_id: Joi.string(),
         adset_name: Joi.string(),
-        ad_id: Joi.number().unsafe(),
+        ad_id: Joi.string(),
         ad_name: Joi.string(),
         clicks: Joi.number().optional(),
         cpc: Joi.number().optional(),
@@ -116,8 +116,8 @@ export const ADS_INSIGHTS: Pipeline = {
     ],
 };
 
-export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
-    name: 'CampaignsPublisherPlatformInsights',
+export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
+    name: 'AdsPublisherPlatformInsights',
     insightsConfig: {
         level: 'ad',
         breakdowns: 'publisher_platform',
@@ -148,13 +148,13 @@ export const CAMPAIGNS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
-        account_id: Joi.number().unsafe(),
+        account_id: Joi.string(),
         publisher_platform: Joi.string(),
-        campaign_id: Joi.number().unsafe(),
+        campaign_id: Joi.string(),
         campaign_name: Joi.string(),
-        adset_id: Joi.number().unsafe(),
+        adset_id: Joi.string(),
         adset_name: Joi.string(),
-        ad_id: Joi.number().unsafe(),
+        ad_id: Joi.string(),
         ad_name: Joi.string(),
         clicks: Joi.number().optional(),
         cpc: Joi.number().optional(),
@@ -239,11 +239,11 @@ export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
-        account_id: Joi.number().unsafe(),
+        account_id: Joi.string(),
         device_platform: Joi.string(),
         publisher_platform: Joi.string(),
         platform_position: Joi.string(),
-        campaign_id: Joi.number().unsafe(),
+        campaign_id: Joi.string(),
         campaign_name: Joi.string(),
         clicks: Joi.number().optional(),
         cpc: Joi.number().optional(),
@@ -330,9 +330,9 @@ export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
-        account_id: Joi.number().unsafe(),
+        account_id: Joi.string(),
         country: Joi.string(),
-        campaign_id: Joi.number().unsafe(),
+        campaign_id: Joi.string(),
         campaign_name: Joi.string(),
         clicks: Joi.number().optional(),
         cpc: Joi.number().optional(),
