@@ -45,6 +45,7 @@ export const ADS: Pipeline = {
                     { name: 'image_url', type: 'STRING' },
                 ],
             },
+            { name: '_batched_at', type: 'TIMESTAMP' },
         ],
         writeDisposition: 'WRITE_TRUNCATE',
     }),

@@ -36,12 +36,12 @@ export const runPipeline = async (pipeline_: pipelines.Pipeline, options: Pipeli
 };
 
 export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
-    logger.info({ action: 'createPipelineTasks', options: { start, end } });
+    logger.info({ fn: 'createPipelineTasks', options: { start, end } });
 
     const accounts = await getAccounts();
 
     return Promise.all([
-        Object.keys([pipelines.ADS])
+        Object.keys(pipelines)
             .map((pipeline) => {
                 return accounts.map(({ account_id }) => ({
                     accountId: account_id,
