@@ -1,10 +1,12 @@
+import { Readable } from 'node:stream';
 import Joi from 'joi';
 
-import { InsightsConfig } from './insights.service';
+import { getInsightsStream } from '../facebook/insights.service';
+import { PipelineOptions } from './pipeline.request.dto';
 
 export type Pipeline = {
     name: string;
-    insightsConfig: InsightsConfig;
+    get: (options: PipelineOptions) => Promise<Readable>;
     validationSchema: Joi.Schema;
     schema: Record<string, any>[];
 };
@@ -15,7 +17,7 @@ const actionBreakdownSchema = Joi.array()
 
 export const ADS_INSIGHTS: Pipeline = {
     name: 'AdsInsights',
-    insightsConfig: {
+    get: getInsightsStream({
         level: 'ad',
         fields: [
             'date_start',
@@ -41,7 +43,7 @@ export const ADS_INSIGHTS: Pipeline = {
             'reach',
             'spend',
         ],
-    },
+    }),
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
@@ -118,7 +120,7 @@ export const ADS_INSIGHTS: Pipeline = {
 
 export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     name: 'AdsPublisherPlatformInsights',
-    insightsConfig: {
+    get: getInsightsStream({
         level: 'ad',
         breakdowns: 'publisher_platform',
         fields: [
@@ -144,7 +146,7 @@ export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
             'reach',
             'spend',
         ],
-    },
+    }),
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
@@ -213,7 +215,7 @@ export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
 
 export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
     name: 'CampaignsDevicePlatformPositionInsights',
-    insightsConfig: {
+    get: getInsightsStream({
         level: 'campaign',
         breakdowns: 'device_platform,publisher_platform,platform_position',
         fields: [
@@ -235,7 +237,7 @@ export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
             'reach',
             'spend',
         ],
-    },
+    }),
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),
@@ -304,7 +306,7 @@ export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
 
 export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
     name: 'CampaignsCountryInsights',
-    insightsConfig: {
+    get: getInsightsStream({
         level: 'campaign',
         breakdowns: 'country',
         fields: [
@@ -326,7 +328,7 @@ export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
             'reach',
             'spend',
         ],
-    },
+    }),
     validationSchema: Joi.object({
         date_start: Joi.string(),
         date_stop: Joi.string(),

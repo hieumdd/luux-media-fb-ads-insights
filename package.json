@@ -22,7 +22,8 @@
         "joi": "^17.9.2",
         "lodash": "^4.17.21",
         "ndjson": "^2.0.0",
-        "uuid": "^9.0.0"
+        "uuid": "^9.0.0",
+        "winston": "^3.10.0"
     },
     "jest": {
         "preset": "ts-jest",

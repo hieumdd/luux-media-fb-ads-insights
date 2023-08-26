@@ -1,49 +1,47 @@
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import Joi from 'joi';
 import ndjson from 'ndjson';
 
-import { createLoadStream } from '../bigquery/bigquery.service';
-import { createTasks } from '../task/cloud-tasks.service';
-import { getAccounts } from './account.service';
-import { ReportOptions, get } from './insights.service';
+import dayjs from '../dayjs';
+import { logger } from '../logging.service';
+import { createLoadStream } from '../bigquery.service';
+import { createTasks } from '../cloud-tasks.service';
+import { getAccounts } from '../facebook/account.service';
+import { CreatePipelineTasksBody, PipelineOptions } from './pipeline.request.dto';
 import * as pipelines from './pipeline.const';
 
-dayjs.extend(utc);
+export const runPipeline = async (pipeline_: pipelines.Pipeline, options: PipelineOptions) => {
+    logger.info({ action: 'run-pipeline', pipeline: pipeline_.name, options });
 
-export const runPipeline = async (reportOptions: ReportOptions, pipeline_: pipelines.Pipeline) => {
-    const stream = await get(reportOptions, pipeline_.insightsConfig);
+    const stream = await pipeline_.get(options);
 
-    await pipeline(
+    return pipeline(
         stream,
         new Transform({
             objectMode: true,
             transform: (row, _, callback) => {
-                callback(null, {
-                    ...Joi.attempt(row, pipeline_.validationSchema),
-                    _batched_at: dayjs().toISOString(),
-                });
+                const { value, error } = pipeline_.validationSchema.validate(row);
+
+                if (error) {
+                    callback(error);
+                    return;
+                }
+
+                callback(null, { ...value, _batched_at: dayjs().utc().toISOString() });
             },
         }),
         ndjson.stringify(),
         createLoadStream({
-            table: `p_${pipeline_.name}__${reportOptions.accountId}`,
+            table: `p_${pipeline_.name}__${options.accountId}`,
             schema: [...pipeline_.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
             writeDisposition: 'WRITE_APPEND',
         }),
-    );
-
-    return true;
+    ).then(() => ({ pipeline: pipeline_.name, ...options }));
 };
 
-export type CreatePipelineTasksOptions = {
-    start?: string;
-    end?: string;
-};
+export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
+    logger.info({ action: 'run-pipeline', options: { start, end } });
 
-export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksOptions) => {
     const accounts = await getAccounts();
 
     return Promise.all([
