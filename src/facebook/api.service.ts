@@ -1,4 +1,7 @@
-import axios from 'axios';
+import { Readable } from 'node:stream';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+
+import { logger } from '../logging.service';
 
 type DopplerSecretResponse = { value: { raw: string } };
 
@@ -18,4 +21,34 @@ export const getClient = async () => {
         baseURL: `https://graph.facebook.com/${API_VER}`,
         params: { access_token: accessToken },
     });
+};
+
+export type GetResponse = {
+    data: Record<string, any>[];
+    paging: { cursors: { after: string }; next: string };
+};
+
+export const getExtractStream = async (
+    client: AxiosInstance,
+    config: (after?: string) => AxiosRequestConfig,
+) => {
+    const stream = new Readable({ objectMode: true, read: () => {} });
+
+    const _getInsights = (after?: string) => {
+        client
+            .request<GetResponse>(config(after))
+            .then((response) => response.data)
+            .then(({ data, paging }) => {
+                data.forEach((row) => stream.push(row));
+                paging.next ? _getInsights(paging.cursors.after) : stream.push(null);
+            })
+            .catch((error) => {
+                logger.error({ error });
+                stream.emit('error', error);
+            });
+    };
+
+    _getInsights();
+
+    return stream;
 };
