@@ -13,7 +13,7 @@ import * as pipelines from './pipeline.const';
 export const runPipeline = async (pipeline_: pipelines.Pipeline, options: PipelineOptions) => {
     logger.info({ action: 'run-pipeline', pipeline: pipeline_.name, options });
 
-    const stream = await pipeline_.get(options);
+    const stream = await pipeline_.getExtractStream(options);
 
     return pipeline(
         stream,
@@ -31,11 +31,7 @@ export const runPipeline = async (pipeline_: pipelines.Pipeline, options: Pipeli
             },
         }),
         ndjson.stringify(),
-        createLoadStream({
-            table: `p_${pipeline_.name}__${options.accountId}`,
-            schema: [...pipeline_.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
-            writeDisposition: 'WRITE_APPEND',
-        }),
+        pipeline_.getLoadStream(`p_${pipeline_.name}__${options.accountId}`),
     ).then(() => ({ pipeline: pipeline_.name, ...options }));
 };
 
@@ -45,7 +41,7 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBod
     const accounts = await getAccounts();
 
     return Promise.all([
-        Object.keys(pipelines)
+        Object.keys([pipelines.ADS])
             .map((pipeline) => {
                 return accounts.map(({ account_id }) => ({
                     accountId: account_id,
@@ -59,13 +55,12 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBod
             Readable.from(accounts),
             ndjson.stringify(),
             createLoadStream({
-                table: `Accounts`,
                 schema: [
                     { name: 'account_name', type: 'STRING' },
                     { name: 'account_id', type: 'INT64' },
                 ],
                 writeDisposition: 'WRITE_TRUNCATE',
-            }),
+            })('Accounts'),
         ),
     ]);
 };

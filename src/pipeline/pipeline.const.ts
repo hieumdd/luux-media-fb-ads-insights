@@ -1,15 +1,16 @@
-import { Readable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import Joi from 'joi';
 
 import { getDimensionStream } from '../facebook/dimension.service';
 import { getInsightsStream } from '../facebook/insights.service';
 import { PipelineOptions } from './pipeline.request.dto';
+import { createLoadStream } from '../bigquery.service';
 
 export type Pipeline = {
     name: string;
-    get: (options: PipelineOptions) => Promise<Readable>;
+    getExtractStream: (options: PipelineOptions) => Promise<Readable>;
     validationSchema: Joi.Schema;
-    schema: Record<string, any>[];
+    getLoadStream: (name: string) => Writable;
 };
 
 const actionBreakdownSchema = Joi.array()
@@ -18,7 +19,7 @@ const actionBreakdownSchema = Joi.array()
 
 export const ADS: Pipeline = {
     name: 'Ads',
-    get: getDimensionStream({
+    getExtractStream: getDimensionStream({
         endpoint: 'ads',
         fields: ['id', 'creative{id,name,thumbnail_url,image_url}'],
     }),
@@ -31,24 +32,27 @@ export const ADS: Pipeline = {
             image_url: Joi.string(),
         }),
     }),
-    schema: [
-        { name: 'id', type: 'NUMERIC' },
-        {
-            name: 'creative',
-            type: 'RECORD',
-            fields: [
-                { name: 'id', type: 'NUMERIC' },
-                { name: 'name', type: 'STRING' },
-                { name: 'thumbnail_url', type: 'STRING' },
-                { name: 'image_url', type: 'STRING' },
-            ],
-        },
-    ],
+    getLoadStream: createLoadStream({
+        schema: [
+            { name: 'id', type: 'NUMERIC' },
+            {
+                name: 'creative',
+                type: 'RECORD',
+                fields: [
+                    { name: 'id', type: 'NUMERIC' },
+                    { name: 'name', type: 'STRING' },
+                    { name: 'thumbnail_url', type: 'STRING' },
+                    { name: 'image_url', type: 'STRING' },
+                ],
+            },
+        ],
+        writeDisposition: 'WRITE_TRUNCATE',
+    }),
 };
 
 export const ADS_INSIGHTS: Pipeline = {
     name: 'AdsInsights',
-    get: getInsightsStream({
+    getExtractStream: getInsightsStream({
         level: 'ad',
         fields: [
             'date_start',
@@ -99,59 +103,62 @@ export const ADS_INSIGHTS: Pipeline = {
         action_values: actionBreakdownSchema,
         cost_per_action_type: actionBreakdownSchema,
     }),
-    schema: [
-        { name: 'date_start', type: 'DATE' },
-        { name: 'date_stop', type: 'DATE' },
-        { name: 'account_id', type: 'NUMERIC' },
-        { name: 'campaign_id', type: 'NUMERIC' },
-        { name: 'campaign_name', type: 'STRING' },
-        { name: 'adset_id', type: 'NUMERIC' },
-        { name: 'adset_name', type: 'STRING' },
-        { name: 'ad_id', type: 'NUMERIC' },
-        { name: 'ad_name', type: 'STRING' },
-        { name: 'cpc', type: 'NUMERIC' },
-        { name: 'cpm', type: 'NUMERIC' },
-        { name: 'ctr', type: 'NUMERIC' },
-        { name: 'frequency', type: 'NUMERIC' },
-        { name: 'impressions', type: 'NUMERIC' },
-        { name: 'inline_link_click_ctr', type: 'NUMERIC' },
-        { name: 'inline_link_clicks', type: 'NUMERIC' },
-        { name: 'reach', type: 'NUMERIC' },
-        { name: 'spend', type: 'NUMERIC' },
-        {
-            name: 'actions',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        {
-            name: 'action_values',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        { name: 'clicks', type: 'NUMERIC' },
-        {
-            name: 'cost_per_action_type',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-    ],
+    getLoadStream: createLoadStream({
+        schema: [
+            { name: 'date_start', type: 'DATE' },
+            { name: 'date_stop', type: 'DATE' },
+            { name: 'account_id', type: 'NUMERIC' },
+            { name: 'campaign_id', type: 'NUMERIC' },
+            { name: 'campaign_name', type: 'STRING' },
+            { name: 'adset_id', type: 'NUMERIC' },
+            { name: 'adset_name', type: 'STRING' },
+            { name: 'ad_id', type: 'NUMERIC' },
+            { name: 'ad_name', type: 'STRING' },
+            { name: 'cpc', type: 'NUMERIC' },
+            { name: 'cpm', type: 'NUMERIC' },
+            { name: 'ctr', type: 'NUMERIC' },
+            { name: 'frequency', type: 'NUMERIC' },
+            { name: 'impressions', type: 'NUMERIC' },
+            { name: 'inline_link_click_ctr', type: 'NUMERIC' },
+            { name: 'inline_link_clicks', type: 'NUMERIC' },
+            { name: 'reach', type: 'NUMERIC' },
+            { name: 'spend', type: 'NUMERIC' },
+            {
+                name: 'actions',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            {
+                name: 'action_values',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            { name: 'clicks', type: 'NUMERIC' },
+            {
+                name: 'cost_per_action_type',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+        ],
+        writeDisposition: 'WRITE_APPEND',
+    }),
 };
 
 export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
     name: 'AdsPublisherPlatformInsights',
-    get: getInsightsStream({
+    getExtractStream: getInsightsStream({
         level: 'ad',
         breakdowns: 'publisher_platform',
         fields: [
@@ -202,51 +209,54 @@ export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
         actions: actionBreakdownSchema,
         action_values: actionBreakdownSchema,
     }),
-    schema: [
-        { name: 'date_start', type: 'DATE' },
-        { name: 'date_stop', type: 'DATE' },
-        { name: 'account_id', type: 'NUMERIC' },
-        { name: 'publisher_platform', type: 'STRING' },
-        { name: 'campaign_id', type: 'NUMERIC' },
-        { name: 'campaign_name', type: 'STRING' },
-        { name: 'adset_id', type: 'NUMERIC' },
-        { name: 'adset_name', type: 'STRING' },
-        { name: 'ad_id', type: 'NUMERIC' },
-        { name: 'ad_name', type: 'STRING' },
-        { name: 'cpc', type: 'NUMERIC' },
-        { name: 'cpm', type: 'NUMERIC' },
-        { name: 'ctr', type: 'NUMERIC' },
-        { name: 'frequency', type: 'NUMERIC' },
-        { name: 'impressions', type: 'NUMERIC' },
-        { name: 'inline_link_click_ctr', type: 'NUMERIC' },
-        { name: 'inline_link_clicks', type: 'NUMERIC' },
-        { name: 'reach', type: 'NUMERIC' },
-        { name: 'spend', type: 'NUMERIC' },
-        {
-            name: 'actions',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        {
-            name: 'action_values',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        { name: 'clicks', type: 'NUMERIC' },
-    ],
+    getLoadStream: createLoadStream({
+        schema: [
+            { name: 'date_start', type: 'DATE' },
+            { name: 'date_stop', type: 'DATE' },
+            { name: 'account_id', type: 'NUMERIC' },
+            { name: 'publisher_platform', type: 'STRING' },
+            { name: 'campaign_id', type: 'NUMERIC' },
+            { name: 'campaign_name', type: 'STRING' },
+            { name: 'adset_id', type: 'NUMERIC' },
+            { name: 'adset_name', type: 'STRING' },
+            { name: 'ad_id', type: 'NUMERIC' },
+            { name: 'ad_name', type: 'STRING' },
+            { name: 'cpc', type: 'NUMERIC' },
+            { name: 'cpm', type: 'NUMERIC' },
+            { name: 'ctr', type: 'NUMERIC' },
+            { name: 'frequency', type: 'NUMERIC' },
+            { name: 'impressions', type: 'NUMERIC' },
+            { name: 'inline_link_click_ctr', type: 'NUMERIC' },
+            { name: 'inline_link_clicks', type: 'NUMERIC' },
+            { name: 'reach', type: 'NUMERIC' },
+            { name: 'spend', type: 'NUMERIC' },
+            {
+                name: 'actions',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            {
+                name: 'action_values',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            { name: 'clicks', type: 'NUMERIC' },
+        ],
+        writeDisposition: 'WRITE_APPEND',
+    }),
 };
 
 export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
     name: 'CampaignsDevicePlatformPositionInsights',
-    get: getInsightsStream({
+    getExtractStream: getInsightsStream({
         level: 'campaign',
         breakdowns: 'device_platform,publisher_platform,platform_position',
         fields: [
@@ -291,53 +301,56 @@ export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
         actions: actionBreakdownSchema,
         action_values: actionBreakdownSchema,
     }),
-    schema: [
-        { name: 'date_start', type: 'DATE' },
-        { name: 'date_stop', type: 'DATE' },
-        { name: 'account_id', type: 'NUMERIC' },
-        { name: 'device_platform', type: 'STRING' },
-        { name: 'publisher_platform', type: 'STRING' },
-        { name: 'platform_position', type: 'STRING' },
-        { name: 'campaign_id', type: 'NUMERIC' },
-        { name: 'campaign_name', type: 'STRING' },
-        { name: 'adset_id', type: 'NUMERIC' },
-        { name: 'adset_name', type: 'STRING' },
-        { name: 'ad_id', type: 'NUMERIC' },
-        { name: 'ad_name', type: 'STRING' },
-        { name: 'cpc', type: 'NUMERIC' },
-        { name: 'cpm', type: 'NUMERIC' },
-        { name: 'ctr', type: 'NUMERIC' },
-        { name: 'frequency', type: 'NUMERIC' },
-        { name: 'impressions', type: 'NUMERIC' },
-        { name: 'inline_link_click_ctr', type: 'NUMERIC' },
-        { name: 'inline_link_clicks', type: 'NUMERIC' },
-        { name: 'reach', type: 'NUMERIC' },
-        { name: 'spend', type: 'NUMERIC' },
-        {
-            name: 'actions',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        {
-            name: 'action_values',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        { name: 'clicks', type: 'NUMERIC' },
-    ],
+    getLoadStream: createLoadStream({
+        schema: [
+            { name: 'date_start', type: 'DATE' },
+            { name: 'date_stop', type: 'DATE' },
+            { name: 'account_id', type: 'NUMERIC' },
+            { name: 'device_platform', type: 'STRING' },
+            { name: 'publisher_platform', type: 'STRING' },
+            { name: 'platform_position', type: 'STRING' },
+            { name: 'campaign_id', type: 'NUMERIC' },
+            { name: 'campaign_name', type: 'STRING' },
+            { name: 'adset_id', type: 'NUMERIC' },
+            { name: 'adset_name', type: 'STRING' },
+            { name: 'ad_id', type: 'NUMERIC' },
+            { name: 'ad_name', type: 'STRING' },
+            { name: 'cpc', type: 'NUMERIC' },
+            { name: 'cpm', type: 'NUMERIC' },
+            { name: 'ctr', type: 'NUMERIC' },
+            { name: 'frequency', type: 'NUMERIC' },
+            { name: 'impressions', type: 'NUMERIC' },
+            { name: 'inline_link_click_ctr', type: 'NUMERIC' },
+            { name: 'inline_link_clicks', type: 'NUMERIC' },
+            { name: 'reach', type: 'NUMERIC' },
+            { name: 'spend', type: 'NUMERIC' },
+            {
+                name: 'actions',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            {
+                name: 'action_values',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            { name: 'clicks', type: 'NUMERIC' },
+        ],
+        writeDisposition: 'WRITE_APPEND',
+    }),
 };
 
 export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
     name: 'CampaignsCountryInsights',
-    get: getInsightsStream({
+    getExtractStream: getInsightsStream({
         level: 'campaign',
         breakdowns: 'country',
         fields: [
@@ -380,40 +393,43 @@ export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
         actions: actionBreakdownSchema,
         action_values: actionBreakdownSchema,
     }),
-    schema: [
-        { name: 'date_start', type: 'DATE' },
-        { name: 'date_stop', type: 'DATE' },
-        { name: 'account_id', type: 'NUMERIC' },
-        { name: 'country', type: 'STRING' },
-        { name: 'campaign_id', type: 'NUMERIC' },
-        { name: 'campaign_name', type: 'STRING' },
-        { name: 'cpc', type: 'NUMERIC' },
-        { name: 'cpm', type: 'NUMERIC' },
-        { name: 'ctr', type: 'NUMERIC' },
-        { name: 'frequency', type: 'NUMERIC' },
-        { name: 'impressions', type: 'NUMERIC' },
-        { name: 'inline_link_click_ctr', type: 'NUMERIC' },
-        { name: 'inline_link_clicks', type: 'NUMERIC' },
-        { name: 'reach', type: 'NUMERIC' },
-        { name: 'spend', type: 'NUMERIC' },
-        {
-            name: 'actions',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        {
-            name: 'action_values',
-            type: 'RECORD',
-            mode: 'REPEATED',
-            fields: [
-                { name: 'action_type', type: 'STRING' },
-                { name: 'value', type: 'NUMERIC' },
-            ],
-        },
-        { name: 'clicks', type: 'NUMERIC' },
-    ],
+    getLoadStream: createLoadStream({
+        schema: [
+            { name: 'date_start', type: 'DATE' },
+            { name: 'date_stop', type: 'DATE' },
+            { name: 'account_id', type: 'NUMERIC' },
+            { name: 'country', type: 'STRING' },
+            { name: 'campaign_id', type: 'NUMERIC' },
+            { name: 'campaign_name', type: 'STRING' },
+            { name: 'cpc', type: 'NUMERIC' },
+            { name: 'cpm', type: 'NUMERIC' },
+            { name: 'ctr', type: 'NUMERIC' },
+            { name: 'frequency', type: 'NUMERIC' },
+            { name: 'impressions', type: 'NUMERIC' },
+            { name: 'inline_link_click_ctr', type: 'NUMERIC' },
+            { name: 'inline_link_clicks', type: 'NUMERIC' },
+            { name: 'reach', type: 'NUMERIC' },
+            { name: 'spend', type: 'NUMERIC' },
+            {
+                name: 'actions',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            {
+                name: 'action_values',
+                type: 'RECORD',
+                mode: 'REPEATED',
+                fields: [
+                    { name: 'action_type', type: 'STRING' },
+                    { name: 'value', type: 'NUMERIC' },
+                ],
+            },
+            { name: 'clicks', type: 'NUMERIC' },
+        ],
+        writeDisposition: 'WRITE_APPEND',
+    }),
 };
