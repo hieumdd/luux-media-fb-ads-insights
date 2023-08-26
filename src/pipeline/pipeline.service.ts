@@ -11,7 +11,7 @@ import { CreatePipelineTasksBody, PipelineOptions } from './pipeline.request.dto
 import * as pipelines from './pipeline.const';
 
 export const runPipeline = async (pipeline_: pipelines.Pipeline, options: PipelineOptions) => {
-    logger.info({ action: 'run-pipeline', pipeline: pipeline_.name, options });
+    logger.info({ fn: 'runPipeline', pipeline: pipeline_.name, options });
 
     const stream = await pipeline_.getExtractStream(options);
 
@@ -36,7 +36,7 @@ export const runPipeline = async (pipeline_: pipelines.Pipeline, options: Pipeli
 };
 
 export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
-    logger.info({ action: 'run-pipeline', options: { start, end } });
+    logger.info({ action: 'createPipelineTasks', options: { start, end } });
 
     const accounts = await getAccounts();
 
