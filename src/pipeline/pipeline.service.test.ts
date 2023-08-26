@@ -2,7 +2,7 @@ import * as pipelines from './pipeline.const';
 import { createPipelineTasks, runPipeline } from './pipeline.service';
 
 it('pipeline', async () => {
-    return runPipeline(pipelines.CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS, {
+    return runPipeline(pipelines.ADS, {
         accountId: '1099851690370717',
         start: '2023-07-01',
         end: '2023-08-01',

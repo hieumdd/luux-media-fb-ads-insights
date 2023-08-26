@@ -12,8 +12,8 @@ export const getDimensionStream = ({ endpoint, fields }: GetDimensionsConfig) =>
 
         return getExtractStream(client, (after) => ({
             method: 'GET',
-            url: `/${options.accountId}/${endpoint}`,
-            params: { fields, limit: 500, after },
+            url: `/act_${options.accountId}/${endpoint}`,
+            params: { fields, limit: 100, after },
         }));
     };
 };

@@ -20,6 +20,7 @@ export const getClient = async () => {
     return axios.create({
         baseURL: `https://graph.facebook.com/${API_VER}`,
         params: { access_token: accessToken },
+        paramsSerializer: { indexes: null },
     });
 };
 
@@ -34,13 +35,13 @@ export const getExtractStream = async (
 ) => {
     const stream = new Readable({ objectMode: true, read: () => {} });
 
-    const _getInsights = (after?: string) => {
+    const _get = (after?: string) => {
         client
             .request<GetResponse>(config(after))
             .then((response) => response.data)
             .then(({ data, paging }) => {
                 data.forEach((row) => stream.push(row));
-                paging.next ? _getInsights(paging.cursors.after) : stream.push(null);
+                paging.next ? _get(paging.cursors.after) : stream.push(null);
             })
             .catch((error) => {
                 logger.error({ error });
@@ -48,7 +49,7 @@ export const getExtractStream = async (
             });
     };
 
-    _getInsights();
+    _get();
 
     return stream;
 };
