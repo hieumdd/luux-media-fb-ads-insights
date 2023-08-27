@@ -17,11 +17,31 @@ export const getClient = async () => {
         })
         .then(({ data }) => data.value.raw);
 
-    return axios.create({
+    const client = axios.create({
         baseURL: `https://graph.facebook.com/${API_VER}`,
         params: { access_token: accessToken },
         paramsSerializer: { indexes: null },
     });
+
+    client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (axios.isAxiosError(error)) {
+                logger.error({
+                    error: {
+                        config: error.config,
+                        response: { data: error.response?.data, headers: error.response?.headers },
+                    },
+                });
+            } else {
+                logger.error({ error });
+            }
+
+            throw error;
+        },
+    );
+
+    return client;
 };
 
 export type GetResponse = {
@@ -43,10 +63,7 @@ export const getExtractStream = async (
                 data.forEach((row) => stream.push(row));
                 paging?.next ? _get(paging.cursors.after) : stream.push(null);
             })
-            .catch((error) => {
-                logger.error({ error });
-                stream.emit('error', error);
-            });
+            .catch((error) => stream.emit('error', error));
     };
 
     _get();

@@ -69,10 +69,6 @@ export const getInsightsStream = (config: GetInsightsConfig) => {
                     url: `/${reportId}/insights`,
                     params: { after, limit: 500 },
                 }));
-            })
-            .catch((error) => {
-                logger.error({ error });
-                throw error;
             });
     };
 };
