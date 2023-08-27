@@ -26,7 +26,7 @@ export const getClient = async () => {
 
 export type GetResponse = {
     data: Record<string, any>[];
-    paging: { cursors: { after: string }; next: string };
+    paging?: { cursors: { after: string }; next: string };
 };
 
 export const getExtractStream = async (
@@ -41,7 +41,7 @@ export const getExtractStream = async (
             .then((response) => response.data)
             .then(({ data, paging }) => {
                 data.forEach((row) => stream.push(row));
-                paging.next ? _get(paging.cursors.after) : stream.push(null);
+                paging?.next ? _get(paging.cursors.after) : stream.push(null);
             })
             .catch((error) => {
                 logger.error({ error });
