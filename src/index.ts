@@ -11,8 +11,8 @@ import { runPipeline, createPipelineTasks } from './pipeline/pipeline.service';
 
 const app = express();
 
-app.use(({ path, body }, _, next) => {
-    logger.info({ path, body });
+app.use(({ headers, path, body }, _, next) => {
+    logger.info({ headers, path, body });
     next();
 });
 
