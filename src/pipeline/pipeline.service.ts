@@ -31,7 +31,16 @@ export const runPipeline = async (pipeline_: pipelines.Pipeline, options: Pipeli
             },
         }),
         ndjson.stringify(),
-        pipeline_.getLoadStream(`p_${pipeline_.name}__${options.accountId}`),
+        createLoadStream(
+            {
+                schema: [
+                    ...pipeline_.loadConfig.schema,
+                    { name: '_batched_at', type: 'TIMESTAMP' },
+                ],
+                writeDisposition: pipeline_.loadConfig.writeDisposition,
+            },
+            `p_${pipeline_.name}__${options.accountId}`,
+        ),
     ).then(() => ({ pipeline: pipeline_.name, ...options }));
 };
 
@@ -54,13 +63,16 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBod
         pipeline(
             Readable.from(accounts),
             ndjson.stringify(),
-            createLoadStream({
-                schema: [
-                    { name: 'account_name', type: 'STRING' },
-                    { name: 'account_id', type: 'INT64' },
-                ],
-                writeDisposition: 'WRITE_TRUNCATE',
-            })('Accounts'),
+            createLoadStream(
+                {
+                    schema: [
+                        { name: 'account_name', type: 'STRING' },
+                        { name: 'account_id', type: 'INT64' },
+                    ],
+                    writeDisposition: 'WRITE_TRUNCATE',
+                },
+                'Accounts',
+            ),
         ),
     ]);
 };

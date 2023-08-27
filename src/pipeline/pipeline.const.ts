@@ -1,16 +1,16 @@
-import { Readable, Writable } from 'node:stream';
+import { Readable } from 'node:stream';
 import Joi from 'joi';
 
+import { CreateLoadStreamConfig } from '../bigquery.service';
 import { getDimensionStream } from '../facebook/dimension.service';
 import { getInsightsStream } from '../facebook/insights.service';
 import { PipelineOptions } from './pipeline.request.dto';
-import { createLoadStream } from '../bigquery.service';
 
 export type Pipeline = {
     name: string;
     getExtractStream: (options: PipelineOptions) => Promise<Readable>;
     validationSchema: Joi.Schema;
-    getLoadStream: (name: string) => Writable;
+    loadConfig: CreateLoadStreamConfig;
 };
 
 const actionBreakdownSchema = Joi.array()
@@ -32,7 +32,7 @@ export const ADS: Pipeline = {
             image_url: Joi.string(),
         }),
     }),
-    getLoadStream: createLoadStream({
+    loadConfig: {
         schema: [
             { name: 'id', type: 'NUMERIC' },
             {
@@ -48,7 +48,7 @@ export const ADS: Pipeline = {
             { name: '_batched_at', type: 'TIMESTAMP' },
         ],
         writeDisposition: 'WRITE_TRUNCATE',
-    }),
+    },
 };
 
 export const ADS_INSIGHTS: Pipeline = {
@@ -104,7 +104,7 @@ export const ADS_INSIGHTS: Pipeline = {
         action_values: actionBreakdownSchema,
         cost_per_action_type: actionBreakdownSchema,
     }),
-    getLoadStream: createLoadStream({
+    loadConfig: {
         schema: [
             { name: 'date_start', type: 'DATE' },
             { name: 'date_stop', type: 'DATE' },
@@ -154,7 +154,7 @@ export const ADS_INSIGHTS: Pipeline = {
             },
         ],
         writeDisposition: 'WRITE_APPEND',
-    }),
+    },
 };
 
 export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
@@ -210,7 +210,7 @@ export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
         actions: actionBreakdownSchema,
         action_values: actionBreakdownSchema,
     }),
-    getLoadStream: createLoadStream({
+    loadConfig: {
         schema: [
             { name: 'date_start', type: 'DATE' },
             { name: 'date_stop', type: 'DATE' },
@@ -252,7 +252,7 @@ export const ADS_PUBLISHER_PLATFORM_INSIGHTS: Pipeline = {
             { name: 'clicks', type: 'NUMERIC' },
         ],
         writeDisposition: 'WRITE_APPEND',
-    }),
+    },
 };
 
 export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
@@ -302,7 +302,7 @@ export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
         actions: actionBreakdownSchema,
         action_values: actionBreakdownSchema,
     }),
-    getLoadStream: createLoadStream({
+    loadConfig: {
         schema: [
             { name: 'date_start', type: 'DATE' },
             { name: 'date_stop', type: 'DATE' },
@@ -346,7 +346,7 @@ export const CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS: Pipeline = {
             { name: 'clicks', type: 'NUMERIC' },
         ],
         writeDisposition: 'WRITE_APPEND',
-    }),
+    },
 };
 
 export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
@@ -394,7 +394,7 @@ export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
         actions: actionBreakdownSchema,
         action_values: actionBreakdownSchema,
     }),
-    getLoadStream: createLoadStream({
+    loadConfig: {
         schema: [
             { name: 'date_start', type: 'DATE' },
             { name: 'date_stop', type: 'DATE' },
@@ -432,5 +432,5 @@ export const CAMPAIGNS_COUNTRY_INSIGHTS: Pipeline = {
             { name: 'clicks', type: 'NUMERIC' },
         ],
         writeDisposition: 'WRITE_APPEND',
-    }),
+    },
 };

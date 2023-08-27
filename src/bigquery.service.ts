@@ -5,22 +5,20 @@ const client = new BigQuery();
 
 const DATASET = 'Facebook';
 
-type CreateLoadStreamOptions = {
+export type CreateLoadStreamConfig = {
     schema: Record<string, any>[];
     writeDisposition: 'WRITE_APPEND' | 'WRITE_TRUNCATE';
 };
 
-export const createLoadStream = (options: CreateLoadStreamOptions) => {
-    return (table: string) => {
-        return client
-            .dataset(DATASET)
-            .table(table)
-            .createWriteStream({
-                schema: { fields: options.schema },
-                sourceFormat: 'NEWLINE_DELIMITED_JSON',
-                createDisposition: 'CREATE_IF_NEEDED',
-                writeDisposition: options.writeDisposition,
-            })
-            .on('job', () => logger.debug({ fn: 'load', table }));
-    };
+export const createLoadStream = (options: CreateLoadStreamConfig, table: string) => {
+    return client
+        .dataset(DATASET)
+        .table(table)
+        .createWriteStream({
+            schema: { fields: options.schema },
+            sourceFormat: 'NEWLINE_DELIMITED_JSON',
+            createDisposition: 'CREATE_IF_NEEDED',
+            writeDisposition: options.writeDisposition,
+        })
+        .on('job', () => logger.debug({ fn: 'load', table }));
 };
