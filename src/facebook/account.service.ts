@@ -12,7 +12,7 @@ export const getAccounts = async () => {
             return client
                 .request<ListAccountsResponse>({
                     method: 'GET',
-                    params: { limit: 500, fields: 'name,account_id' },
+                    params: { limit: 500, fields: ['name', 'account_id'] },
                     url: `/${BUSINESS_ID}/${edge}`,
                 })
                 .then((response) => {
