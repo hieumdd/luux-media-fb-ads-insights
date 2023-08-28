@@ -18,12 +18,12 @@ export const getDimensionStream = ({ endpoint, fields }: GetDimensionsConfig) =>
             filtering: [
                 {
                     field: 'ad.updated_time',
-                    operator: 'GREATER_THAN',
+                    operator: 'GREATER_THAN_OR_EQUAL',
                     value: dayjs.utc(start).unix(),
                 },
                 {
                     field: 'ad.updated_time',
-                    operator: 'LESS_THAN',
+                    operator: 'LESS_THAN_OR_EQUAL',
                     value: dayjs.utc(end).unix(),
                 },
             ],
