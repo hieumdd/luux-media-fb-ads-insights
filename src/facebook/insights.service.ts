@@ -56,7 +56,7 @@ export const getInsightsStream = (config: GetInsightsConfig) => {
                 throw new Error(JSON.stringify(data));
             }
 
-            await setTimeout(10_000);
+            await setTimeout(20_000);
 
             return pollReport(reportId);
         };
