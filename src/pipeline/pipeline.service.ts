@@ -33,11 +33,8 @@ export const runPipeline = async (pipeline_: pipelines.Pipeline, options: Pipeli
         ndjson.stringify(),
         createLoadStream(
             {
-                schema: [
-                    ...pipeline_.loadConfig.schema,
-                    { name: '_batched_at', type: 'TIMESTAMP' },
-                ],
-                writeDisposition: pipeline_.loadConfig.writeDisposition,
+                schema: [...pipeline_.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
+                writeDisposition: 'WRITE_APPEND',
             },
             `p_${pipeline_.name}__${options.accountId}`,
         ),

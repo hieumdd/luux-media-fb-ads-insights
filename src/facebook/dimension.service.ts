@@ -1,3 +1,4 @@
+import dayjs from '../dayjs';
 import { getClient, getExtractStream } from './api.service';
 import { PipelineOptions } from '../pipeline/pipeline.request.dto';
 
@@ -7,13 +8,25 @@ type GetDimensionsConfig = {
 };
 
 export const getDimensionStream = ({ endpoint, fields }: GetDimensionsConfig) => {
-    return async (options: PipelineOptions) => {
+    return async ({ accountId, start, end }: PipelineOptions) => {
         const client = await getClient();
 
         return getExtractStream(client, (after) => ({
             method: 'GET',
-            url: `/act_${options.accountId}/${endpoint}`,
-            params: { fields, limit: 100, after },
+            url: `/act_${accountId}/${endpoint}`,
+            params: { fields, limit: 250, after },
+            filtering: [
+                {
+                    field: 'ad.updated_time',
+                    operator: 'GREATER_THAN',
+                    value: dayjs.utc(start).unix(),
+                },
+                {
+                    field: 'ad.updated_time',
+                    operator: 'LESS_THAN',
+                    value: dayjs.utc(end).unix(),
+                },
+            ],
         }));
     };
 };
