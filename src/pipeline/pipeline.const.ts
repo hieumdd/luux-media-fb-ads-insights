@@ -21,30 +21,16 @@ export const ADS: Pipeline = {
     name: 'Ads',
     getExtractStream: getDimensionStream({
         endpoint: 'ads',
-        fields: ['id', 'creative{id,name,thumbnail_url,image_url}'],
+        fields: ['id', 'preview_shareable_link'],
     }),
     validationSchema: Joi.object({
         id: Joi.string(),
-        creative: Joi.object({
-            id: Joi.string(),
-            name: Joi.string(),
-            thumbnail_url: Joi.string(),
-            image_url: Joi.string(),
-        }),
+        preview_shareable_link: Joi.string(),
     }),
     loadConfig: {
         schema: [
             { name: 'id', type: 'NUMERIC' },
-            {
-                name: 'creative',
-                type: 'RECORD',
-                fields: [
-                    { name: 'id', type: 'NUMERIC' },
-                    { name: 'name', type: 'STRING' },
-                    { name: 'thumbnail_url', type: 'STRING' },
-                    { name: 'image_url', type: 'STRING' },
-                ],
-            },
+            { name: 'preview_shareable_link', type: 'STRING' },
         ],
         writeDisposition: 'WRITE_TRUNCATE',
     },
