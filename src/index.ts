@@ -7,7 +7,11 @@ import {
     RunPipelineBodySchema,
 } from './pipeline/pipeline.request.dto';
 import * as pipelines from './pipeline/pipeline.const';
-import { runPipeline, createPipelineTasks } from './pipeline/pipeline.service';
+import {
+    runPipeline,
+    createInsightsPipelineTasks,
+    createAdsPipelineTasks,
+} from './pipeline/pipeline.service';
 
 const app = express();
 
@@ -25,7 +29,26 @@ app.use('/task', ({ body }, res) => {
         return;
     }
 
-    createPipelineTasks(value)
+    createInsightsPipelineTasks(value)
+        .then((result) => {
+            res.status(200).json({ result });
+        })
+        .catch((error) => {
+            logger.error({ error });
+            res.status(500).json({ error });
+        });
+});
+
+app.use('/task-ads', ({ body }, res) => {
+    const { value, error } = CreatePipelineTasksBodySchema.validate(body);
+
+    if (error) {
+        logger.warn({ error });
+        res.status(400).json({ error });
+        return;
+    }
+
+    createAdsPipelineTasks(value)
         .then((result) => {
             res.status(200).json({ result });
         })
