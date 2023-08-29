@@ -47,7 +47,11 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBod
     const accounts = await getAccounts();
 
     return Promise.all([
-        Object.keys(pipelines)
+        [
+            pipelines.ADS_PUBLISHER_PLATFORM_INSIGHTS,
+            pipelines.CAMPAIGNS_COUNTRY_INSIGHTS,
+            pipelines.CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS,
+        ]
             .map((pipeline) => {
                 return accounts.map(({ account_id }) => ({
                     accountId: account_id,

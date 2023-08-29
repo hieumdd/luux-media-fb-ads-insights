@@ -17,35 +17,35 @@ const actionBreakdownSchema = Joi.array()
     .items({ action_type: Joi.string(), value: Joi.number() })
     .optional();
 
-// export const ADS: Pipeline = {
-//     name: 'Ads',
-//     getExtractStream: getDimensionStream({
-//         endpoint: 'ads',
-//         fields: ['id', 'creative{id,name,thumbnail_url,image_url}'],
-//     }),
-//     validationSchema: Joi.object({
-//         id: Joi.string(),
-//         creative: Joi.object({
-//             id: Joi.string(),
-//             name: Joi.string(),
-//             thumbnail_url: Joi.string(),
-//             image_url: Joi.string(),
-//         }),
-//     }),
-//     schema: [
-//         { name: 'id', type: 'NUMERIC' },
-//         {
-//             name: 'creative',
-//             type: 'RECORD',
-//             fields: [
-//                 { name: 'id', type: 'NUMERIC' },
-//                 { name: 'name', type: 'STRING' },
-//                 { name: 'thumbnail_url', type: 'STRING' },
-//                 { name: 'image_url', type: 'STRING' },
-//             ],
-//         },
-//     ],
-// };
+export const ADS: Pipeline = {
+    name: 'Ads',
+    getExtractStream: getDimensionStream({
+        endpoint: 'ads',
+        fields: ['id', 'creative{id,name,thumbnail_url,image_url}'],
+    }),
+    validationSchema: Joi.object({
+        id: Joi.string(),
+        creative: Joi.object({
+            id: Joi.string(),
+            name: Joi.string(),
+            thumbnail_url: Joi.string(),
+            image_url: Joi.string(),
+        }),
+    }),
+    schema: [
+        { name: 'id', type: 'NUMERIC' },
+        {
+            name: 'creative',
+            type: 'RECORD',
+            fields: [
+                { name: 'id', type: 'NUMERIC' },
+                { name: 'name', type: 'STRING' },
+                { name: 'thumbnail_url', type: 'STRING' },
+                { name: 'image_url', type: 'STRING' },
+            ],
+        },
+    ],
+};
 
 export const ADS_INSIGHTS: Pipeline = {
     name: 'AdsInsights',
