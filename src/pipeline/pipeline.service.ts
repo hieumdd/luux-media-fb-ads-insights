@@ -10,11 +10,8 @@ import { getAccounts } from '../facebook/account.service';
 import { CreatePipelineTasksBody, PipelineOptions } from './pipeline.request.dto';
 import * as pipelines from './pipeline.const';
 
-export const runInsightsPipeline = async (
-    pipeline_: pipelines.Pipeline,
-    options: PipelineOptions,
-) => {
-    logger.info({ fn: 'runInsightsPipeline', pipeline: pipeline_.name, options });
+export const runPipeline = async (pipeline_: pipelines.Pipeline, options: PipelineOptions) => {
+    logger.info({ fn: 'runPipeline', pipeline: pipeline_.name, options });
 
     const stream = await pipeline_.getExtractStream(options);
 
@@ -45,37 +42,6 @@ export const runInsightsPipeline = async (
             `p_${pipeline_.name}__${options.accountId}`,
         ),
     ).then(() => ({ pipeline: pipeline_.name, ...options }));
-};
-
-export const runAdsPipeline = async (options: PipelineOptions) => {
-    logger.info({ fn: 'runAdsPipeline' });
-
-    const stream = await pipelines.ADS.getExtractStream(options);
-
-    return pipeline(
-        stream,
-        new Transform({
-            objectMode: true,
-            transform: (row, _, callback) => {
-                const { value, error } = pipelines.ADS.validationSchema.validate(row);
-
-                if (error) {
-                    callback(error);
-                    return;
-                }
-
-                callback(null, { ...value, _batched_at: dayjs().utc().toISOString() });
-            },
-        }),
-        ndjson.stringify(),
-        createLoadStream(
-            {
-                schema: [...pipelines.ADS.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
-                writeDisposition: 'WRITE_APPEND',
-            },
-            `p_${pipelines.ADS.name}__${options.accountId}`,
-        ),
-    ).then(() => ({ pipeline: pipelines.ADS.name, ...options }));
 };
 
 export const createInsightsPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
