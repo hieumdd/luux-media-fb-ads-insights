@@ -35,18 +35,7 @@ export const getClient = async () => {
     });
 
     client.interceptors.response.use(
-        async (response) => {
-            const usage = Object.values(
-                <BusinessUseCaseUsage>JSON.parse(response.headers['x-business-use-case-usage']),
-            ).flat();
-
-            if (usage.some((account) => account.total_time >= 50 || account.total_cputime >= 50)) {
-                await setTimeout(1000);
-                return response;
-            }
-
-            return response;
-        },
+        (response) => response,
         (error) => {
             if (axios.isAxiosError(error)) {
                 logger.error({
