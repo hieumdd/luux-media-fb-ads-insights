@@ -6,16 +6,6 @@ import { logger } from '../logging.service';
 
 type DopplerSecretResponse = { value: { raw: string } };
 
-type BusinessUseCaseUsage = {
-    [key: string]: {
-        type: string;
-        call_count: number;
-        total_cputime: number;
-        total_time: number;
-        estimated_time_to_regain_access: number;
-    };
-};
-
 export const getClient = async () => {
     const API_VER = 'v17.0';
 
