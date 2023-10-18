@@ -81,19 +81,20 @@ export const createInsightsPipelineTasks = async ({ start, end }: CreatePipeline
     ]);
 };
 
-export const createAdsPipelineTasks = async (_: CreatePipelineTasksBody) => {
-    logger.info({ fn: 'createAdsPipelineTasks' });
+export const createCustomPipelineTasks = async (_: CreatePipelineTasksBody) => {
+    logger.info({ fn: 'createCustomPipelineTasks' });
 
-    const accountIds = [
-        '1064565224448567',
-        '224717170151419',
-        '220506957265195',
-        '1220093882213517',
-        '193539783445588',
-    ];
+    const customs = [
+        ['ADS', '1064565224448567'],
+        ['ADS', '224717170151419'],
+        ['ADS', '220506957265195'],
+        ['ADS', '1220093882213517'],
+        ['ADS', '193539783445588'],
+        ['CampaignsAgeGenderInsights', '285219587325995'],
+    ] as const;
 
     return createTasks(
-        accountIds.map((accountId) => ({ accountId, pipeline: 'ADS' })),
+        customs.map(([pipeline, accountId]) => ({ accountId, pipeline })),
         (task) => [task.pipeline, task.accountId].join('-'),
     );
 };

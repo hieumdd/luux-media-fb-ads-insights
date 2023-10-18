@@ -10,7 +10,7 @@ import * as pipelines from './pipeline/pipeline.const';
 import {
     runPipeline,
     createInsightsPipelineTasks,
-    createAdsPipelineTasks,
+    createCustomPipelineTasks,
 } from './pipeline/pipeline.service';
 
 const app = express();
@@ -39,7 +39,7 @@ app.use('/task', ({ body }, res) => {
         });
 });
 
-app.use('/task-ads', ({ body }, res) => {
+app.use('/task-custom', ({ body }, res) => {
     const { value, error } = CreatePipelineTasksBodySchema.validate(body);
 
     if (error) {
@@ -48,7 +48,7 @@ app.use('/task-ads', ({ body }, res) => {
         return;
     }
 
-    createAdsPipelineTasks(value)
+    createCustomPipelineTasks(value)
         .then((result) => {
             res.status(200).json({ result });
         })
