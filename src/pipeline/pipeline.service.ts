@@ -91,6 +91,12 @@ export const createCustomPipelineTasks = async (_: CreatePipelineTasksBody) => {
         ['ADS', '1220093882213517'],
         ['ADS', '193539783445588'],
         ['CampaignsAgeGenderInsights', '285219587325995'],
+        ['CampaignsRegionInsights', '1064565224448567'],
+        ['CampaignsRegionInsights', '224717170151419'],
+        ['CampaignsRegionInsights', '220506957265195'],
+        ['CampaignsRegionInsights', '1220093882213517'],
+        ['CampaignsRegionInsights', '193539783445588'],
+
     ] as const;
 
     return createTasks(
