@@ -1,84 +1,80 @@
-import express from 'express';
-import { http } from '@google-cloud/functions-framework';
+import express, { NextFunction, Request, Response } from 'express';
+import { ValidatedRequest, createValidator } from 'express-joi-validation';
+import bodyParser from 'body-parser';
+import Joi from 'joi';
+import { isObject } from 'lodash';
 
-import { logger } from './logging.service';
-import {
-    CreatePipelineTasksBodySchema,
-    RunPipelineBodySchema,
-} from './pipeline/pipeline.request.dto';
+import { getLogger } from './logging.service';
 import * as pipelines from './pipeline/pipeline.const';
 import {
     runPipeline,
     createInsightsPipelineTasks,
     createCustomPipelineTasks,
 } from './pipeline/pipeline.service';
+import {
+    CreatePipelineTasksBodySchema,
+    CreatePipelineTasksRequest,
+    RunInsightsPipelineBodySchema,
+    RunInsightsPipelineRequest,
+} from './pipeline/pipeline.request.dto';
 
+const logger = getLogger(__filename);
 const app = express();
+const validator = createValidator({ passError: true, joi: { stripUnknown: true } });
 
-app.use(({ headers, path, body }, _, next) => {
-    logger.info({ headers, path, body });
+app.use(bodyParser.json());
+
+app.use(({ method, path, body }, res, next) => {
+    logger.info({ method, path, body });
+    res.on('finish', () => {
+        logger.info({ method, path, body, status: res.statusCode });
+    });
     next();
 });
 
-app.use('/task', ({ body }, res) => {
-    const { value, error } = CreatePipelineTasksBodySchema.validate(body);
+app.use(
+    '/task',
+    validator.body(CreatePipelineTasksBodySchema),
+    ({ body }: ValidatedRequest<CreatePipelineTasksRequest>, res, next) => {
+        createInsightsPipelineTasks(body)
+            .then((result) => res.status(200).json({ result }))
+            .catch(next);
+    },
+);
 
-    if (error) {
-        logger.warn({ error });
-        res.status(400).json({ error });
+app.use(
+    '/task-custom',
+    validator.body(CreatePipelineTasksBodySchema),
+    ({ body }: ValidatedRequest<CreatePipelineTasksRequest>, res, next) => {
+        createCustomPipelineTasks(body)
+            .then((result) => res.status(200).json({ result }))
+            .catch(next);
+    },
+);
+
+app.use(
+    '/',
+    validator.body(RunInsightsPipelineBodySchema),
+    ({ body }: ValidatedRequest<RunInsightsPipelineRequest>, res, next) => {
+        runPipeline(pipelines[body.pipeline], {
+            accountId: body.accountId,
+            start: body.start,
+            end: body.end,
+        })
+            .then((result) => res.status(200).json({ result }))
+            .catch(next);
+    },
+);
+
+app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
+    if (isObject(error) && 'error' in error && Joi.isError(error.error)) {
+        logger.warn({ error: error.error });
+        res.status(400).json({ error: error.error });
         return;
     }
 
-    createInsightsPipelineTasks(value)
-        .then((result) => {
-            res.status(200).json({ result });
-        })
-        .catch((error) => {
-            logger.error({ error });
-            res.status(500).json({ error });
-        });
+    logger.error({ error });
+    res.status(500).json({ error });
 });
 
-app.use('/task-custom', ({ body }, res) => {
-    const { value, error } = CreatePipelineTasksBodySchema.validate(body);
-
-    if (error) {
-        logger.warn({ error });
-        res.status(400).json({ error });
-        return;
-    }
-
-    createCustomPipelineTasks(value)
-        .then((result) => {
-            res.status(200).json({ result });
-        })
-        .catch((error) => {
-            logger.error({ error });
-            res.status(500).json({ error });
-        });
-});
-
-app.use('/', ({ body }, res) => {
-    const { value, error } = RunPipelineBodySchema.validate(body);
-
-    if (error) {
-        logger.warn({ error });
-        res.status(400).json({ error });
-        return;
-    }
-
-    return runPipeline(pipelines[value.pipeline], {
-        accountId: value.accountId,
-        start: value.start,
-        end: value.end,
-    })
-        .then((result) => {
-            res.status(200).json({ result });
-        })
-        .catch((error) => {
-            logger.error({ error });
-            res.status(500).json({ error });
-        });
-});
-
-http('main', app);
+app.listen(8080);

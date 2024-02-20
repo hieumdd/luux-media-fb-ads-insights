@@ -1,5 +1,7 @@
 import { BigQuery } from '@google-cloud/bigquery';
-import { logger } from './logging.service';
+import { getLogger } from './logging.service';
+
+const logger = getLogger(__filename);
 
 const client = new BigQuery();
 

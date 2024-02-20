@@ -1,9 +1,16 @@
-import { createLogger, format, transports } from 'winston';
-const { combine, printf } = format;
+import path from 'node:path';
 
-export const logger = createLogger({
-    format: combine(
-        printf(({ level, message }) => JSON.stringify({ severity: level, ...message })),
-    ),
-    transports: [new transports.Console()],
-});
+import { createLogger, format, transports } from 'winston';
+import stringify from 'safe-stable-stringify';
+
+export const getLogger = (moduleName = __filename) => {
+    return createLogger({
+        level: 'debug',
+        defaultMeta: { module: path.basename(moduleName) },
+        format: format.printf(({ message, level, ...meta }) => {
+            const _message = message instanceof Object ? message : { message };
+            return stringify({ severity: level, ..._message, ...meta })!;
+        }),
+        transports: [new transports.Console()],
+    });
+};

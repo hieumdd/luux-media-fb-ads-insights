@@ -4,11 +4,11 @@ import Joi from 'joi';
 import { CreateLoadStreamConfig } from '../bigquery.service';
 import { getDimensionStream } from '../facebook/dimension.service';
 import { getInsightsStream } from '../facebook/insights.service';
-import { PipelineOptions } from './pipeline.request.dto';
+import { FacebookRequestOptions } from './pipeline.request.dto';
 
 export type Pipeline = {
     name: string;
-    getExtractStream: (options: PipelineOptions) => Promise<Readable>;
+    getExtractStream: (options: FacebookRequestOptions) => Promise<Readable>;
     validationSchema: Joi.Schema;
     loadConfig: CreateLoadStreamConfig;
 };

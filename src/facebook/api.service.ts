@@ -2,7 +2,9 @@ import { Readable } from 'node:stream';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import qs from 'query-string';
 
-import { logger } from '../logging.service';
+import { getLogger } from '../logging.service';
+
+const logger = getLogger(__filename);
 
 export const getClient = async () => {
     const accessToken = await axios

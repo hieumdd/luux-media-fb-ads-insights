@@ -1,15 +1,20 @@
 import Joi from 'joi';
+import { ContainerTypes, ValidatedRequestSchema } from 'express-joi-validation';
 
 import dayjs from '../dayjs';
 import * as pipelines from './pipeline.const';
 
-export type PipelineOptions = {
+export type FacebookRequestOptions = {
     accountId: string;
     start: string;
     end: string;
 };
 
-export type CreatePipelineTasksBody = Partial<Omit<PipelineOptions, 'accountId'>>;
+export type CreatePipelineTasksBody = Partial<Omit<FacebookRequestOptions, 'accountId'>>;
+
+export interface CreatePipelineTasksRequest extends ValidatedRequestSchema {
+    [ContainerTypes.Body]: CreatePipelineTasksBody;
+}
 
 export const CreatePipelineTasksBodySchema = Joi.object<CreatePipelineTasksBody>({
     start: Joi.string()
@@ -20,11 +25,19 @@ export const CreatePipelineTasksBodySchema = Joi.object<CreatePipelineTasksBody>
     end: Joi.string().optional().empty(null).allow(null).default(dayjs.utc().format('YYYY-MM-DD')),
 });
 
-type RunPipelineBody = PipelineOptions & { pipeline: keyof typeof pipelines };
+export type RunInsightsPipelineBody = FacebookRequestOptions & {
+    pipeline: keyof typeof pipelines;
+};
 
-export const RunPipelineBodySchema = Joi.object<RunPipelineBody>({
-    accountId: Joi.string(),
-    start: Joi.string(),
-    end: Joi.string(),
-    pipeline: Joi.string(),
+export interface RunInsightsPipelineRequest extends ValidatedRequestSchema {
+    [ContainerTypes.Body]: RunInsightsPipelineBody;
+}
+
+export const RunInsightsPipelineBodySchema = Joi.object<RunInsightsPipelineBody>({
+    accountId: Joi.string().required(),
+    start: Joi.string().required(),
+    end: Joi.string().required(),
+    pipeline: Joi.string()
+        .valid(...Object.keys(pipelines))
+        .required(),
 });

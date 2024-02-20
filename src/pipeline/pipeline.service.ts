@@ -3,14 +3,19 @@ import { pipeline } from 'node:stream/promises';
 import ndjson from 'ndjson';
 
 import dayjs from '../dayjs';
-import { logger } from '../logging.service';
+import { getLogger } from '../logging.service';
 import { createLoadStream } from '../bigquery.service';
 import { createTasks } from '../cloud-tasks.service';
 import { getAccounts } from '../facebook/account.service';
-import { CreatePipelineTasksBody, PipelineOptions } from './pipeline.request.dto';
+import { CreatePipelineTasksBody, FacebookRequestOptions } from './pipeline.request.dto';
 import * as pipelines from './pipeline.const';
 
-export const runPipeline = async (pipeline_: pipelines.Pipeline, options: PipelineOptions) => {
+const logger = getLogger(__filename);
+
+export const runPipeline = async (
+    pipeline_: pipelines.Pipeline,
+    options: FacebookRequestOptions,
+) => {
     logger.info({ fn: 'runPipeline', pipeline: pipeline_.name, options });
 
     const stream = await pipeline_.getExtractStream(options);

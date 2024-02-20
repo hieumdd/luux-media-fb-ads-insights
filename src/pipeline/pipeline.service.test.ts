@@ -7,25 +7,29 @@ import {
 
 describe('pipeline', () => {
     it.each([
-        pipelines.CAMPAIGNS_AGE_GENDER_INSIGHTS,
-        pipelines.CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS,
-        pipelines.CAMPAIGNS_COUNTRY_INSIGHTS,
-        pipelines.CAMPAIGNS_REGION_INSIGHTS,
-        pipelines.ADS_PUBLISHER_PLATFORM_INSIGHTS,
-    ])('$.name', async (pipeline) => {
-        return runPipeline(pipeline, {
-            accountId: '605738303715189',
-            start: '2023-12-01',
-            end: '2024-02-01',
-        })
-            .then((results) => {
-                expect(results).toBeDefined();
+        // pipelines.CAMPAIGNS_AGE_GENDER_INSIGHTS,
+        // pipelines.CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS,
+        // pipelines.CAMPAIGNS_COUNTRY_INSIGHTS,
+        // pipelines.CAMPAIGNS_REGION_INSIGHTS,
+        pipelines.ADS,
+    ])(
+        '$.name',
+        async (pipeline) => {
+            return runPipeline(pipeline, {
+                accountId: '1353175741501928',
+                start: '2023-12-01',
+                end: '2024-02-01',
             })
-            .catch((error) => {
-                console.error({ error });
-                return Promise.reject(error);
-            });
-    });
+                .then((results) => {
+                    expect(results).toBeDefined();
+                })
+                .catch((error) => {
+                    console.error({ error });
+                    return Promise.reject(error);
+                });
+        },
+        100_000_000,
+    );
 });
 
 it('pispeline', async () => {

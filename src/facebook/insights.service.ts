@@ -1,8 +1,10 @@
 import { setTimeout } from 'node:timers/promises';
 
-import { logger } from '../logging.service';
+import { getLogger } from '../logging.service';
 import { getClient, getExtractStream } from './api.service';
-import { PipelineOptions } from '../pipeline/pipeline.request.dto';
+import { FacebookRequestOptions } from '../pipeline/pipeline.request.dto';
+
+const logger = getLogger(__filename);
 
 export type GetInsightsConfig = {
     level: string;
@@ -11,7 +13,7 @@ export type GetInsightsConfig = {
 };
 
 export const getInsightsStream = (config: GetInsightsConfig) => {
-    return async (options: PipelineOptions) => {
+    return async (options: FacebookRequestOptions) => {
         const client = await getClient();
 
         const requestReport = async (): Promise<string> => {
