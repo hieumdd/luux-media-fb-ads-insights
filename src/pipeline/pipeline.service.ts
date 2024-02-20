@@ -54,6 +54,7 @@ export const createInsightsPipelineTasks = async ({ start, end }: CreatePipeline
             'ADS_PUBLISHER_PLATFORM_INSIGHTS',
             'CAMPAIGNS_COUNTRY_INSIGHTS',
             'CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS',
+            'ADS',
         ]
             .map((pipeline) => {
                 return accounts.map(({ account_id }) => ({
@@ -85,26 +86,18 @@ export const createCustomPipelineTasks = async ({ start, end }: CreatePipelineTa
     logger.info({ fn: 'createCustomPipelineTasks' });
 
     const customs = [
-        ['ADS', '1064565224448567'],
-        ['ADS', '224717170151419'],
-        ['ADS', '220506957265195'],
-        ['ADS', '1220093882213517'],
-        ['ADS', '193539783445588'],
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '285219587325995'],
         ['CAMPAIGNS_REGION_INSIGHTS', '1064565224448567'],
         ['CAMPAIGNS_REGION_INSIGHTS', '224717170151419'],
         ['CAMPAIGNS_REGION_INSIGHTS', '220506957265195'],
         ['CAMPAIGNS_REGION_INSIGHTS', '1220093882213517'],
         ['CAMPAIGNS_REGION_INSIGHTS', '193539783445588'],
-        
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '1064565224448567'],
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '224717170151419'],
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '220506957265195'],
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '1220093882213517'],
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '193539783445588'],
         ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '887134739259540'],
-        ['ADS', '887134739259540'],
-
     ] as const;
 
     return createTasks(
