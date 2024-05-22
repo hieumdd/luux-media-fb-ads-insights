@@ -1,7 +1,7 @@
 import { setTimeout } from 'node:timers/promises';
 
 import { getLogger } from '../logging.service';
-import { getClient, getExtractStream } from './api.service';
+import { getClient, getPaginatedStream } from './api.service';
 import { FacebookRequestOptions } from '../pipeline/pipeline.request.dto';
 
 const logger = getLogger(__filename);
@@ -66,7 +66,7 @@ export const getInsightsStream = (config: GetInsightsConfig) => {
         return requestReport()
             .then(pollReport)
             .then((reportId) => {
-                return getExtractStream(client, (after) => ({
+                return getPaginatedStream(client, (after) => ({
                     method: 'GET',
                     url: `/${reportId}/insights`,
                     params: { after, limit: 500 },

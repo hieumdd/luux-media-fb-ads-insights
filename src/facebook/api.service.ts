@@ -47,18 +47,18 @@ export const getClient = async () => {
     return client;
 };
 
-export type GetResponse = {
-    data: Record<string, any>[];
-    paging?: { cursors: { after: string }; next: string };
-};
-
-export const getExtractStream = async (
+export const getPaginatedStream = (
     client: AxiosInstance,
     config: (after?: string) => AxiosRequestConfig,
 ) => {
     const stream = new Readable({ objectMode: true, read: () => {} });
 
     const _get = (after?: string) => {
+        type GetResponse = {
+            data: Record<string, any>[];
+            paging?: { cursors: { after: string }; next: string };
+        };
+
         client
             .request<GetResponse>(config(after))
             .then((response) => response.data)
