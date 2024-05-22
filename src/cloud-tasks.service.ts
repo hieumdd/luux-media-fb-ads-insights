@@ -31,7 +31,5 @@ export const createTasks = async <P>({ location, queue, payloads, name }: Create
         },
     }));
 
-    return
-
     return await Promise.all(tasks.map((r) => client.createTask(r))).then((requests) => requests.length);
 };
