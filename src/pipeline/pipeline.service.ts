@@ -10,6 +10,8 @@ import { getAccounts } from '../facebook/account.service';
 import { CreatePipelineTasksBody, FacebookRequestOptions } from './pipeline.request.dto';
 import * as pipelines from './pipeline.const';
 
+export const BUSINESS_ID = '479140315800396';
+
 const logger = getLogger(__filename);
 
 export const runPipeline = async (
@@ -52,7 +54,7 @@ export const runPipeline = async (
 export const createInsightsPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
     logger.info({ fn: 'createInsightsPipelineTasks', options: { start, end } });
 
-    const accounts = await getAccounts();
+    const accounts = await getAccounts('BUSINESS_ID');
 
     return Promise.all([
         [

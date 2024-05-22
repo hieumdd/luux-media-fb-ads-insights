@@ -1,13 +1,12 @@
 import { getAccounts } from './account.service';
+import { BUSINESS_ID } from '../pipeline/pipeline.service';
 
-it('get-accounts', async () => {
-    return getAccounts()
-        .then((result) => {
-            console.log(result);
-            expect(result).toBeDefined();
-        })
-        .catch((error) => {
-            console.error({ error });
-            return Promise.reject(error);
-        });
+it('getAccounts', async () => {
+    try {
+        const results = await getAccounts(BUSINESS_ID);
+        expect(results).toBeDefined();
+    } catch (error) {
+        console.error({ error });
+        throw error;
+    }
 });
