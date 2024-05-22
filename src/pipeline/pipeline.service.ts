@@ -1,114 +1,71 @@
-import { Readable, Transform } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-import ndjson from 'ndjson';
+import { Storage } from '@google-cloud/storage';
+import { BigQuery } from '@google-cloud/bigquery';
+import { NdJson } from 'json-nd';
 
-import dayjs from '../dayjs';
 import { getLogger } from '../logging.service';
-import { createLoadStream } from '../bigquery.service';
 import { createTasks } from '../cloud-tasks.service';
 import { getAccounts } from '../facebook/account.service';
+import { Pipeline } from './pipeline.interface';
 import { CreatePipelineTasksBody, FacebookRequestOptions } from './pipeline.request.dto';
 import * as pipelines from './pipeline.const';
 
-export const BUSINESS_ID = '479140315800396';
-
 const logger = getLogger(__filename);
 
-export const runPipeline = async (
-    pipeline_: pipelines.Pipeline,
-    options: FacebookRequestOptions,
-) => {
-    logger.info({ fn: 'runPipeline', pipeline: pipeline_.name, options });
+export const BUSINESS_ID = '479140315800396';
+export const BUCKET = new Storage().bucket('luux-media-facebook');
+export const DATASET = new BigQuery().dataset('Facebook');
+const QUEUE_LOCATION = 'us-central1';
+const QUEUE_NAME = 'fb-ads';
 
-    const stream = await pipeline_.getExtractStream(options);
-
-    return pipeline(
-        stream,
-        new Transform({
-            objectMode: true,
-            transform: (row, _, callback) => {
-                const { value, error } = pipeline_.validationSchema.validate(row);
-
-                if (error) {
-                    callback(error);
-                    return;
-                }
-
-                callback(null, { ...value, _batched_at: dayjs().utc().toISOString() });
-            },
-        }),
-        ndjson.stringify(),
-        createLoadStream(
-            {
-                schema: [
-                    ...pipeline_.loadConfig.schema,
-                    { name: '_batched_at', type: 'TIMESTAMP' },
-                ],
-                writeDisposition: pipeline_.loadConfig.writeDisposition,
-            },
-            `p_${pipeline_.name}__${options.accountId}`,
-        ),
-    ).then(() => ({ pipeline: pipeline_.name, ...options }));
+export const runPipeline = async ({ name, execute }: Pipeline, options: FacebookRequestOptions) => {
+    logger.info(`Running pipeline ${name}`, options);
+    return await execute({ ...options, bucket: BUCKET }).then(() => options);
 };
 
-export const createInsightsPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
-    logger.info({ fn: 'createInsightsPipelineTasks', options: { start, end } });
-
-    const accounts = await getAccounts('BUSINESS_ID');
-
-    return Promise.all([
-        [
-            'ADS_PUBLISHER_PLATFORM_INSIGHTS',
-            'CAMPAIGNS_COUNTRY_INSIGHTS',
-            'CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS',
-            'ADS',
-        ]
-            .map((pipeline) => {
-                return accounts.map(({ account_id }) => ({
-                    accountId: account_id,
-                    start,
-                    end,
-                    pipeline,
-                }));
-            })
-            .map((data) => createTasks(data, (task) => [task.pipeline, task.accountId].join('-'))),
-        pipeline(
-            Readable.from(accounts),
-            ndjson.stringify(),
-            createLoadStream(
-                {
-                    schema: [
-                        { name: 'account_name', type: 'STRING' },
-                        { name: 'account_id', type: 'INT64' },
-                    ],
-                    writeDisposition: 'WRITE_TRUNCATE',
-                },
-                'Accounts',
-            ),
-        ),
+export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
+    logger.info(`Creating mass pipelines`, { start, end });
+    const accounts = await getAccounts(BUSINESS_ID);
+    const create = (pipeline: Pipeline) => {
+        const payloads = accounts.map(({ account_id }) => ({
+            accountId: account_id,
+            pipeline: pipeline.name,
+            start,
+            end,
+        }));
+        return createTasks({
+            location: QUEUE_LOCATION,
+            queue: QUEUE_NAME,
+            payloads,
+            name: (task) => [task.pipeline, task.accountId].join('-'),
+        });
+    };
+    return await Promise.all([
+        BUCKET.file('Accounts.json').save(NdJson.stringify(accounts), { resumable: false }),
+        create(pipelines.AdsPublisherPlatformInsights),
+        create(pipelines.CampaignsCountryInsights),
+        create(pipelines.CampaignsDevicePlatformPositionInsights),
     ]);
 };
 
 export const createCustomPipelineTasks = async ({ start, end }: CreatePipelineTasksBody) => {
-    logger.info({ fn: 'createCustomPipelineTasks' });
-
-    const customs = [
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '285219587325995'],
-        ['CAMPAIGNS_REGION_INSIGHTS', '1064565224448567'],
-        ['CAMPAIGNS_REGION_INSIGHTS', '224717170151419'],
-        ['CAMPAIGNS_REGION_INSIGHTS', '220506957265195'],
-        ['CAMPAIGNS_REGION_INSIGHTS', '1220093882213517'],
-        ['CAMPAIGNS_REGION_INSIGHTS', '193539783445588'],
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '1064565224448567'],
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '224717170151419'],
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '220506957265195'],
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '1220093882213517'],
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '193539783445588'],
-        ['CAMPAIGNS_AGE_GENDER_INSIGHTS', '887134739259540'],
-    ] as const;
-
-    return createTasks(
-        customs.map(([pipeline, accountId]) => ({ accountId, pipeline, start, end })),
-        (task) => [task.pipeline, task.accountId].join('-'),
-    );
+    logger.info(`Creating custom pipelines`, { start, end });
+    return await createTasks({
+        location: QUEUE_LOCATION,
+        queue: QUEUE_NAME,
+        payloads: [
+            [pipelines.CampaignsAgeGenderInsights.name, '285219587325995'],
+            [pipelines.CampaignsRegionInsights.name, '1064565224448567'],
+            [pipelines.CampaignsRegionInsights.name, '224717170151419'],
+            [pipelines.CampaignsRegionInsights.name, '220506957265195'],
+            [pipelines.CampaignsRegionInsights.name, '1220093882213517'],
+            [pipelines.CampaignsRegionInsights.name, '193539783445588'],
+            [pipelines.CampaignsAgeGenderInsights.name, '1064565224448567'],
+            [pipelines.CampaignsAgeGenderInsights.name, '224717170151419'],
+            [pipelines.CampaignsAgeGenderInsights.name, '220506957265195'],
+            [pipelines.CampaignsAgeGenderInsights.name, '1220093882213517'],
+            [pipelines.CampaignsAgeGenderInsights.name, '193539783445588'],
+            [pipelines.CampaignsAgeGenderInsights.name, '887134739259540'],
+        ].map(([pipeline, accountId]) => ({ accountId, pipeline, start, end })),
+        name: (task) => [task.pipeline, task.accountId].join('-'),
+    });
 };

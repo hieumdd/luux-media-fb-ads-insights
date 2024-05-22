@@ -34,7 +34,7 @@ export const getInsightsStream = (config: GetInsightsConfig) => {
             return data.report_run_id;
         };
 
-        const pollReport = async (reportId: string, attempt = 1): Promise<string> => {
+        const pollReport = async (reportId: string, attempt = 0): Promise<string> => {
             type Response = { async_percent_completion: number; async_status: string };
             const { data } = await client.request<Response>({ method: 'GET', url: `/${reportId}` });
 
@@ -52,8 +52,8 @@ export const getInsightsStream = (config: GetInsightsConfig) => {
                 throw new Error('Job Timeout');
             }
 
-            await setTimeout(2 * attempt * 10 * 10000);
-            return await pollReport(reportId);
+            await setTimeout(2 ** attempt * 10 * 1000);
+            return await pollReport(reportId, attempt + 1);
         };
 
         const reportId = await requestReport().then(pollReport);

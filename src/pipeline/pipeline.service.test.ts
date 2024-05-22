@@ -1,72 +1,52 @@
 import * as pipelines from './pipeline.const';
-import {
-    createCustomPipelineTasks,
-    createInsightsPipelineTasks,
-    runPipeline,
-} from './pipeline.service';
+import { createCustomPipelineTasks, createPipelineTasks, runPipeline } from './pipeline.service';
 
 describe('pipeline', () => {
     it.each([
-        // pipelines.CAMPAIGNS_AGE_GENDER_INSIGHTS,
-        // pipelines.CAMPAIGNS_DEVICE_PLATFORM_POSITION_INSIGHTS,
-        // pipelines.CAMPAIGNS_COUNTRY_INSIGHTS,
-        // pipelines.CAMPAIGNS_REGION_INSIGHTS,
-        pipelines.ADS,
+        pipelines.CampaignsDevicePlatformPositionInsights,
+        pipelines.CampaignsCountryInsights,
+        // pipelines.Ads,
+        // pipelines.CampaignsAgeGenderInsights,
+        // pipelines.CampaignsRegionInsights,
     ])(
         '$.name',
         async (pipeline) => {
-            return runPipeline(pipeline, {
-                accountId: '1353175741501928',
-                start: '2023-12-01',
-                end: '2024-02-01',
-            })
-                .then((results) => {
-                    expect(results).toBeDefined();
-                })
-                .catch((error) => {
-                    console.error({ error });
-                    return Promise.reject(error);
+            try {
+                const results = await runPipeline(pipeline, {
+                    accountId: '1353175741501928',
+                    start: '2024-01-01',
+                    end: '2024-01-15',
                 });
+                expect(results).toBeDefined();
+            } catch (error) {
+                console.error({ error });
+                throw error;
+            }
         },
         100_000_000,
     );
 });
 
-it('pispeline', async () => {
-    return runPipeline(pipelines.ADS_PUBLISHER_PLATFORM_INSIGHTS, {
-        accountId: '406026759976583',
-        start: '2023-06-01',
-        end: '2023-08-01',
-    })
-        .then((results) => {
+describe('tasks', () => {
+    const options = { start: '2023-08-28', end: '2023-09-04' };
+
+    it('createPipelineTasks', async () => {
+        try {
+            const results = await createPipelineTasks(options);
             expect(results).toBeDefined();
-        })
-        .catch((error) => {
+        } catch (error) {
             console.error({ error });
-            return Promise.reject(error);
-        });
-});
+            throw error;
+        }
+    });
 
-it('create-tasks-insights', async () => {
-    return createInsightsPipelineTasks({
-        start: '2023-08-28',
-        end: '2023-09-04',
-    })
-        .then((result) => expect(result).toBeDefined())
-        .catch((error) => {
+    it('createCustomPipelineTasks', async () => {
+        try {
+            const results = await createCustomPipelineTasks(options);
+            expect(results).toBeDefined();
+        } catch (error) {
             console.error({ error });
-            return Promise.reject(error);
-        });
-});
-
-it('create-tasks-ads', async () => {
-    return createCustomPipelineTasks({
-        start: '2023-08-28',
-        end: '2023-09-04',
-    })
-        .then((result) => expect(result).toBeDefined())
-        .catch((error) => {
-            console.error({ error });
-            return Promise.reject(error);
-        });
+            throw error;
+        }
+    });
 });
