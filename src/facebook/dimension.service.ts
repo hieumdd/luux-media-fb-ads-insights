@@ -1,10 +1,7 @@
 import { getClient, getPaginatedStream } from './api.service';
 import { FacebookRequestOptions } from '../pipeline/pipeline.request.dto';
 
-type GetDimensionsConfig = {
-    endpoint: string;
-    fields: string[];
-};
+type GetDimensionsConfig = { endpoint: string; fields: string[] };
 
 export const getDimensionStream = ({ endpoint, fields }: GetDimensionsConfig) => {
     return async ({ accountId }: FacebookRequestOptions) => {
