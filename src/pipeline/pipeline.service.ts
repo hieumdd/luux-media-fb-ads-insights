@@ -13,7 +13,7 @@ const logger = getLogger(__filename);
 
 export const BUSINESS_ID = '479140315800396';
 export const BUCKET = new Storage().bucket('luux-media-facebook');
-export const DATASET = new BigQuery().dataset('Facebook');
+export const DATASET = new BigQuery().dataset('Facebook_SRC');
 const QUEUE_LOCATION = 'us-central1';
 const QUEUE_NAME = 'fb-ads';
 
