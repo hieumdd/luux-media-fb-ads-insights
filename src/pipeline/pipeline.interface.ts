@@ -106,7 +106,7 @@ export const createDimensionsPipeline = (options: CreatePipelineConfig) => {
     const storageConfig = {
         path: (accountId: string) => `${name}/_account_id=${accountId}/data.json`,
         sourceUris: (bucketName: string) => [`gs://${bucketName}/${name}/*.${format}`],
-        sourceUriPrefix: (bucketName: string) => `gs://${bucketName}/${name}/{_account_id:INT64}/{_date_start:DATE}`,
+        sourceUriPrefix: (bucketName: string) => `gs://${bucketName}/${name}/{_account_id:INT64}`,
     };
 
     const execute = async (options: RunPipelineOptions) => {

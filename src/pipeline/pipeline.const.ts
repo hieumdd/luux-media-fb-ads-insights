@@ -262,5 +262,5 @@ export const Ads = createDimensionsPipeline({
         endpoint: 'ads',
         fields: ['id', 'preview_shareable_link'],
     }),
-    fields: [new IDField('id'), new StringField('preview_shareable_link')],
+    fields: [new IDField('id'), new StringField('preview_shareable_link'), new TimestampField('_batched_at')],
 });
