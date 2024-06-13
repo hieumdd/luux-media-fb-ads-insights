@@ -6,11 +6,7 @@ import { isObject } from 'lodash';
 
 import { getLogger } from './logging.service';
 import * as pipelines from './pipeline/pipeline.const';
-import {
-    runPipeline,
-    createInsightsPipelineTasks,
-    createCustomPipelineTasks,
-} from './pipeline/pipeline.service';
+import { runPipeline, createPipelineTasks, createCustomPipelineTasks } from './pipeline/pipeline.service';
 import {
     CreatePipelineTasksBodySchema,
     CreatePipelineTasksRequest,
@@ -36,7 +32,7 @@ app.use(
     '/task',
     validator.body(CreatePipelineTasksBodySchema),
     ({ body }: ValidatedRequest<CreatePipelineTasksRequest>, res, next) => {
-        createInsightsPipelineTasks(body)
+        createPipelineTasks(body)
             .then((result) => res.status(200).json({ result }))
             .catch(next);
     },

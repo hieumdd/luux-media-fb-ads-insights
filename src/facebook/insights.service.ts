@@ -1,7 +1,8 @@
+import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
 import { getLogger } from '../logging.service';
-import { getClient, getExtractStream } from './api.service';
+import { getClient, getPaginatedStream } from './api.service';
 import { FacebookRequestOptions } from '../pipeline/pipeline.request.dto';
 
 const logger = getLogger(__filename);
@@ -17,60 +18,49 @@ export const getInsightsStream = (config: GetInsightsConfig) => {
         const client = await getClient();
 
         const requestReport = async (): Promise<string> => {
-            type RequestReportResponse = {
-                report_run_id: string;
-            };
-
             const { accountId, start: since, end: until } = options;
             const { level, fields, breakdowns } = config;
-
-            return client
-                .request<RequestReportResponse>({
-                    method: 'POST',
-                    url: `/act_${accountId}/insights`,
-                    data: {
-                        level,
-                        fields,
-                        breakdowns,
-                        time_range: JSON.stringify({ since, until }),
-                        time_increment: 1,
-                    },
-                })
-                .then(({ data }) => data.report_run_id);
+            const { data } = await client.request<{ report_run_id: string }>({
+                method: 'POST',
+                url: path.join('/', `act_${accountId}`, 'insights'),
+                data: {
+                    level,
+                    fields,
+                    breakdowns,
+                    time_range: JSON.stringify({ since, until }),
+                    time_increment: 1,
+                },
+            });
+            return data.report_run_id;
         };
 
-        const pollReport = async (reportId: string): Promise<string> => {
-            type ReportStatusResponse = {
-                async_percent_completion: number;
-                async_status: string;
-            };
-
-            const data = await client
-                .request<ReportStatusResponse>({ method: 'GET', url: `/${reportId}` })
-                .then((response) => response.data);
+        const pollReport = async (reportId: string, attempt = 0): Promise<string> => {
+            type Response = { async_percent_completion: number; async_status: string };
+            const { data } = await client.request<Response>({ method: 'GET', url: `/${reportId}` });
 
             if (data.async_percent_completion === 100 && data.async_status === 'Job Completed') {
                 return reportId;
             }
 
             if (data.async_status === 'Job Failed') {
-                logger.error(data);
-                throw new Error(JSON.stringify(data));
+                logger.error('Facebook async job failed', data);
+                throw new Error(data.async_status);
             }
 
-            await setTimeout(20_000);
+            if (attempt > 5) {
+                logger.error('Facebook async job timeout', data);
+                throw new Error('Job Timeout');
+            }
 
-            return pollReport(reportId);
+            await setTimeout(2 ** attempt * 10 * 1000);
+            return await pollReport(reportId, attempt + 1);
         };
 
-        return requestReport()
-            .then(pollReport)
-            .then((reportId) => {
-                return getExtractStream(client, (after) => ({
-                    method: 'GET',
-                    url: `/${reportId}/insights`,
-                    params: { after, limit: 500 },
-                }));
-            });
+        const reportId = await requestReport().then(pollReport);
+        return getPaginatedStream(client, (after) => ({
+            method: 'GET',
+            url: `/${reportId}/insights`,
+            params: { after, limit: 500 },
+        }));
     };
 };
