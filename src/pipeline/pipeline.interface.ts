@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Dataset } from '@google-cloud/bigquery';
 import { Bucket } from '@google-cloud/storage';
@@ -15,12 +15,13 @@ import { Field } from './pipeline.schema';
 const logger = getLogger(__filename);
 
 const transformValidate = (schema: Joi.Schema) => {
-    return async function* (rows: any) {
-        for await (const row of rows) {
-            const value = await schema.validateAsync(row);
-            yield { ...value, _batched_at: dayjs().utc().toISOString() };
-        }
-    };
+    return new Transform({
+        objectMode: true,
+        transform: (row, _, callback) => {
+            const { error, value } = schema.validate(row);
+            callback(error, { ...value, _batched_at: dayjs().utc().toISOString() });
+        },
+    });
 };
 
 export type RunPipelineOptions = FacebookRequestOptions & { bucket: Bucket };

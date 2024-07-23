@@ -18,10 +18,7 @@ const getSecret = async (name: string) => {
 };
 
 export const getClient = async () => {
-    const [apiVersion, accessToken] = await Promise.all([
-        getSecret('API_VERSION'),
-        getSecret('USER_ACCESS_TOKEN'),
-    ]);
+    const [apiVersion, accessToken] = await Promise.all([getSecret('API_VERSION'), getSecret('USER_ACCESS_TOKEN')]);
 
     const client = axios.create({
         baseURL: `https://graph.facebook.com/${apiVersion}`,
@@ -47,10 +44,7 @@ export const getClient = async () => {
     return client;
 };
 
-export const getPaginatedStream = (
-    client: AxiosInstance,
-    config: (after?: string) => AxiosRequestConfig,
-) => {
+export const getPaginatedStream = (client: AxiosInstance, config: (after?: string) => AxiosRequestConfig) => {
     const stream = new Readable({ objectMode: true, read: () => {} });
 
     const _get = (after?: string) => {
