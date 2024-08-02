@@ -65,6 +65,7 @@ export const createCustomPipelineTasks = async ({ start, end }: CreatePipelineTa
             [pipelines.CampaignsAgeGenderInsights.name, '1220093882213517'],
             [pipelines.CampaignsAgeGenderInsights.name, '193539783445588'],
             [pipelines.CampaignsAgeGenderInsights.name, '887134739259540'],
+            [pipelines.CampaignsAgeGenderInsights.name, '285219587325995'],
         ].map(([pipeline, accountId]) => ({ accountId, pipeline, start, end })),
         name: (task) => [task.pipeline, task.accountId].join('-'),
     });
